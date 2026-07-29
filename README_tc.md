@@ -4,6 +4,10 @@ SPDX-FileCopyrightText: 2015 - 2024 Rime community
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
+> **這是一個個人 fork**：本倉庫內置了我自己的 Rime 配置（自然碼雙拼 + 虎碼），僅供個人使用，
+> 不是面向公眾的發布版本。項目說明見 [README.md](README.md)。以下內容為上游 osfans/trime 的
+> 原始說明，僅作開發參考。
+
 # 同文 Android 輸入法平臺
 
 ![build](https://github.com/osfans/trime/actions/workflows/commit-ci.yml/badge.svg?branch=develop)
