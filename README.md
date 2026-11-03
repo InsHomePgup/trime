@@ -40,11 +40,8 @@ Release 页面提供已签名的正式版 APK：
 
 👉 [Releases](https://github.com/InsHomePgup/trime/releases)
 
-每个版本按 CPU 架构（ABI）分成几个 APK，选一个装：
-
-- **`arm64-v8a`**：绝大多数近几年的手机，不确定就选这个
-- `armeabi-v7a`：很老的 32 位手机
-- `x86_64` / `x86`：电脑上的安卓模拟器
+只提供 `arm64-v8a` 一个 APK，适用于近几年的安卓手机（很老的 32 位手机不支持）。电脑上的
+Android 模拟器请用 Android 11 及以上的镜像，它们自带 ARM 转译，可以直接装这个 APK。
 
 装完后的设置步骤：
 
@@ -89,14 +86,14 @@ Release 页面提供已签名的正式版 APK：
 
 所有工作流都只在 ubuntu 上跑，并且**只能手动触发**，push 不会自动构建。想在发正式版之前先试一下，可以
 在 [Actions → Commit](https://github.com/InsHomePgup/trime/actions/workflows/commit-ci.yml) 页面点
-**Run workflow** 构建 debug 版，跑完后在该次运行页面底部的 Artifacts 下载（包名带 `.debug`，可以和
+**Run workflow** 构建 debug 版，跑完后在该次运行页面底部的 Artifacts 下载 `trime-ubuntu-24.04`（包名带 `.debug`，可以和
 正式版同时安装）。
 
 ## 没有安卓手机怎么测试
 
 - **方案逻辑**（Lua、反查、词库）是 librime 跑的，桌面和安卓是同一套，可以先在小狼毫/鼠须管上验证
-- **安卓上的效果**：把 Release 里的 `arm64-v8a` APK 发给有安卓手机的人安装；或者在电脑上用
-  Android Studio 自带的模拟器（建 x86_64 镜像）安装 `x86_64` 的 APK，把 APK 拖进模拟器窗口即可
+- **安卓上的效果**：把 Release 里的 APK 发给有安卓手机的人安装；或者在电脑上用
+  Android Studio 自带的模拟器（Android 11+ 镜像）安装，把 APK 拖进模拟器窗口即可
 
 ## 上游项目
 

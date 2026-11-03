@@ -18,7 +18,7 @@ jobs:
         os:
           - ubuntu-24.04
     env:
-      BUILD_ABI: armeabi-v7a,arm64-v8a,x86,x86_64
+      BUILD_ABI: arm64-v8a
     steps:
       - name: Fetch source code
         uses: actions/checkout@v6
@@ -58,7 +58,7 @@ jobs:
         id: jni-cache
         with:
           path: "app/prebuilt"
-          key: ${{ matrix.os }}-trime-jni-debug-${{ steps.cache-hash.outputs.native-cache-hash }}
+          key: ${{ matrix.os }}-trime-jni-debug-${{ env.BUILD_ABI }}-${{ steps.cache-hash.outputs.native-cache-hash }}
 
       - name: Fetch submodules
         if: ${{ !steps.jni-cache.outputs.cache-hit }}
@@ -84,14 +84,6 @@ jobs:
         with:
           name: trime-${{ matrix.os }}
           path: app/build/outputs/apk/debug/
-          # keep 90 days
-          retention-days: 90
-
-      - name: Upload APK artifact (ARM64_V8A only)
-        uses: actions/upload-artifact@v6
-        with:
-          name: trime-arm64-v8a-${{ matrix.os }}
-          path: app/build/outputs/apk/debug/*arm64-v8a-*.apk
           # keep 90 days
           retention-days: 90
 
