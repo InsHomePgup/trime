@@ -14,8 +14,8 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DATA_DIR="$REPO_ROOT/app/data/rime/myrime"
 SHARED_DIR="$REPO_ROOT/app/src/main/assets/shared"
 
-# 非 Rime 运行时文件，不建链接
-EXCLUDE_PATTERN='^(\.git|deploy\.sh|deploy\.ps1|LICENSE|README\.md|recipe\.yaml)$'
+# 非 Rime 运行时文件，不建链接；opencc 由构建任务 installOpenCCData 合并拷贝，不能软链
+EXCLUDE_PATTERN='^(\.git|deploy\.sh|deploy\.ps1|LICENSE|README\.md|CLAUDE\.md|recipe\.yaml|opencc)$'
 
 if [ ! -d "$DATA_DIR" ]; then
     echo "找不到 $DATA_DIR，请先执行 git submodule update --init app/data/rime/myrime" >&2

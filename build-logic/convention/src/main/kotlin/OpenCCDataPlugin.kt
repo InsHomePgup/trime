@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -27,6 +28,10 @@ class OpenCCDataPlugin : Plugin<Project> {
     private val Project.dataInstallDir
         get() = assetsDir.resolve("shared/opencc")
 
+    // 个人配置（MyRimeConfig）里自带的 OpenCC 词典，如虎码拆分、emoji
+    private val Project.customDataDir
+        get() = file("data/rime/myrime/opencc")
+
     override fun apply(target: Project) {
         registerInstallTask(target)
         registerCleanTask(target)
@@ -37,6 +42,9 @@ class OpenCCDataPlugin : Plugin<Project> {
             project.tasks.register<InstallOpenCCDataTask>(INSTALL_TASK) {
                 inputDir.set(project.dataBaseDir)
                 outputDir.set(project.dataInstallDir)
+                if (project.customDataDir.isDirectory) {
+                    customDir.set(project.customDataDir)
+                }
             }
         // make sure OpenCC data have been installed before generating data checksums
         project.tasks.getByName(DataChecksumsPlugin.TASK).dependsOn(task)
@@ -55,6 +63,11 @@ class OpenCCDataPlugin : Plugin<Project> {
         @get:PathSensitive(PathSensitivity.NAME_ONLY)
         @get:InputDirectory
         abstract val inputDir: DirectoryProperty
+
+        @get:PathSensitive(PathSensitivity.RELATIVE)
+        @get:InputDirectory
+        @get:Optional
+        abstract val customDir: DirectoryProperty
 
         @get:OutputDirectory
         abstract val outputDir: DirectoryProperty
@@ -114,6 +127,8 @@ class OpenCCDataPlugin : Plugin<Project> {
                     reverse(inputFile.absolutePath, outputFile.name)
                 }
             }
+            // 最后拷贝个人配置的 OpenCC 文件，同名时覆盖官方文件
+            customDir.orNull?.asFile?.copyRecursively(output, overwrite = true)
         }
     }
 }
