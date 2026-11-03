@@ -4,10 +4,14 @@
 
 name: Release
 on:
+  # 只手动触发：Actions 页面 → Release → Run workflow，填版本号（如 v1.0.2）
+  # tag 不存在：在所选分支最新提交上创建 tag 并发布；tag 已存在：重新构建该 tag 并更新 Release
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
+    inputs:
+      version:
+        description: "版本号，如 v1.0.2"
+        required: true
+        type: string
 env:
   CI_NAME: Release CI
 permissions:
@@ -21,6 +25,25 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+
+      - name: Create or checkout tag
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "版本号格式不对：$VERSION（应为 v1.0.2 这种）" >&2
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+            echo "tag $VERSION 已存在，重新构建该 tag"
+            git checkout -q "$VERSION"
+            git submodule update --init --recursive
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag "$VERSION"
+            git push origin "$VERSION"
+          fi
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -70,6 +93,7 @@ jobs:
         uses: mikepenz/release-changelog-builder-action@v4
         with:
           commitMode: true
+          toTag: ${{ inputs.version }}
           ignorePreReleases: true
           configurationJson: |
             {
@@ -83,7 +107,8 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') }}
+          tag: ${{ inputs.version }}
+          prerelease: ${{ contains(inputs.version, 'alpha') || contains(inputs.version, 'beta') }}
           artifacts: "app/build/outputs/apk/release/*.apk"
           body: |
             ${{ steps.build_changelog.outputs.changelog }}

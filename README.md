@@ -66,8 +66,8 @@ Release 页面提供已签名的正式版 APK：
   （见 `build-logic/convention/src/main/kotlin/OpenCCDataPlugin.kt`）。这个目录**不能**用符号链接，
   否则构建时官方数据会写进 submodule
 - `applicationId` 改为 `com.osfans.trime.myconfig`，App 名称改为「Trime 自定义」，用于和官方版共存
-- `.github/workflows/release-ci.yml` 增加了 `permissions: contents: write`，让 fork 上默认的
-  `GITHUB_TOKEN` 有权限在打 tag 时创建 Release
+- CI 工作流全部改为只手动触发、只跑 ubuntu；Release 工作流改为手动填版本号，自动打 tag 并发布
+  （`permissions: contents: write` 让 fork 上默认的 `GITHUB_TOKEN` 有权限推 tag、建 Release）
 - 版本号用自己的编号（`v1.0.0`、`v1.0.1`…），不跟随上游的 `v3.3.x`。tag 名会通过
   `git describe` 成为 App 里显示的版本号
 - 其余代码、构建方式、Trime 本身的功能均未改动，完整开发文档见官方仓库 [osfans/trime]
@@ -81,13 +81,16 @@ Release 页面提供已签名的正式版 APK：
    里的新增文件都不需要这步）。`.git`、`deploy.*`、`LICENSE`、`README.md`、`CLAUDE.md`、
    `recipe.yaml`、`opencc` 会被跳过
 4. `git add -A && git commit -m "update myrime" && git push`
-5. 打一个新 tag 触发 Release 构建，版本号接着上一个 Release 往下编：
-   `git tag v1.0.X && git push origin v1.0.X`
-6. 等 GitHub Actions 的 Release 工作流跑完（约 15 分钟），新 APK 会自动出现在
+5. 到 GitHub 的 [Actions → Release](https://github.com/InsHomePgup/trime/actions/workflows/release-ci.yml)
+   页面点 **Run workflow**，分支选 `develop`，填版本号（接着上一个 Release 往下编，如 `v1.0.2`）。
+   工作流会自动在该分支最新提交上打 tag；如果填的是已存在的 tag，则重新构建那个版本并更新 Release
+6. 等工作流跑完（约 15–20 分钟），新 APK 会出现在
    [Releases](https://github.com/InsHomePgup/trime/releases) 页面
 
-每次 push 还会触发 Commit 工作流，在 Actions 页面的 artifact 里能下载 debug 版 APK
-（包名带 `.debug`，可以和正式版同时安装），适合发正式版之前先试一下。
+所有工作流都只在 ubuntu 上跑，并且**只能手动触发**，push 不会自动构建。想在发正式版之前先试一下，可以
+在 [Actions → Commit](https://github.com/InsHomePgup/trime/actions/workflows/commit-ci.yml) 页面点
+**Run workflow** 构建 debug 版，跑完后在该次运行页面底部的 Artifacts 下载（包名带 `.debug`，可以和
+正式版同时安装）。
 
 ## 没有安卓手机怎么测试
 
