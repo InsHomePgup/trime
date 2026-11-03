@@ -16,7 +16,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 [![F-Droid release](https://img.shields.io/f-droid/v/com.osfans.trime.svg)](https://f-droid.org/packages/com.osfans.trime)
 [![Latest build](https://img.shields.io/github/last-commit/osfans/trime.svg)](http://osfans.github.io/trime/)
 
-[English](README.md) | [简体中文](README_sc.md) | 繁體中文
+[本倉庫說明](README.md) | [简体中文](README_sc.md) | 繁體中文
 
 ## 關於
 

@@ -5,6 +5,9 @@
 blank_issues_enabled: false
 
 contact_links:
-  - name: GitHub 讨论区 / GitHub Discussions
+  - name: 方案 / 词库 / 配置问题
+    url: https://github.com/InsHomePgup/MyRimeConfig/issues
+    about: 输入方案、词库、Lua 脚本相关的问题请到 MyRimeConfig 仓库反馈。
+  - name: Trime 本体问题（上游）
     url: https://github.com/osfans/trime/discussions
-    about: 请在这里提出有关如何使用本输入法的疑问。 / Please ask questions about how to use the input method here.
+    about: 与本 fork 改动无关的 Trime 本身的问题，请到上游讨论区。
