@@ -22,7 +22,12 @@ object DataManager {
 
     private const val DATA_CHECKSUMS_NAME = "checksums.json"
 
-    private const val SCHEMA_LIST_CUSTOM_PATCH = """
+    /**
+     * 上游 Trime 首次同步时会生成的 default.custom.yaml 内容，把方案列表改成朙月拼音。
+     * 本 fork 内置的是 MyRimeConfig，不带朙月拼音，方案列表应由它的 default.yaml 决定，
+     * 所以不再生成这个文件；旧版本生成过的、内容未被改动的文件会在同步时删除。
+     */
+    private const val LEGACY_SCHEMA_LIST_CUSTOM_PATCH = """
       patch:
         schema_list:
           - schema: luna_pinyin
@@ -105,11 +110,13 @@ object DataManager {
 
         ResourceUtils.copyFile(DATA_CHECKSUMS_NAME, dataDir.resolve(DATA_CHECKSUMS_NAME).absolutePath)
 
+        // 方案列表以 MyRimeConfig 的 default.yaml 为准。在 App 里勾选方案时，
+        // librime 的 levers API 会自己创建 default.custom.yaml，这里不需要预先生成。
         val custom = userDataDir.resolve(DEFAULT_CUSTOM_FILE_NAME)
-        if (!custom.exists()) {
-            if (custom.createNewFile()) {
-                custom.writeText(SCHEMA_LIST_CUSTOM_PATCH.trimIndent())
-            }
+        val legacyPatch = LEGACY_SCHEMA_LIST_CUSTOM_PATCH.trimIndent()
+        if (custom.isFile && custom.runCatching { readText().trim() }.getOrNull() == legacyPatch) {
+            Timber.i("Removing legacy luna_pinyin schema_list patch: $custom")
+            custom.delete()
         }
 
         Timber.d("Synced!")

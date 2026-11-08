@@ -30,3 +30,6 @@
 	path = app/data/rime/myrime
 	url = https://github.com/InsHomePgup/MyRimeConfig.git
 	branch = main
+[submodule "app/data/rime/prelude"]
+	path = app/data/rime/prelude
+	url = https://github.com/rime/rime-prelude
