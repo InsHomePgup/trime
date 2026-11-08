@@ -19,7 +19,7 @@ class ThemePrefs(
         string(
             R.string.selected_theme,
             SELECTED_THEME,
-            "trime",
+            "ios.trime", // 默认使用 iOS 风格主题（assets/shared/ios.trime.yaml）
             R.string.selected_theme_summary,
         )
 
@@ -61,7 +61,8 @@ class ThemePrefs(
         switch(
             R.string.follow_system_day_night_color,
             FOLLOW_SYSTEM_DAY_NIGHT,
-            false,
+            // 默认跟随系统深浅色（iOS 主题的 default 配色指定了 dark_scheme）
+            true,
         )
 
     companion object {

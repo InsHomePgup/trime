@@ -1,0 +1,276 @@
+# SPDX-FileCopyrightText: 2015 - 2024 Rime community
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# iOS 风格主题
+#
+# 仿 iOS 原生键盘：浅灰底、白色圆角字母键、灰色功能键，26 键布局，
+# 底排「123 / 中英 / 空格 / 换行」。跟随系统深浅色切换配色。
+#
+# 以内置的 trime.yaml 为基础（__include），只覆盖样式、配色和几个键盘布局，
+# 其他键盘（符号、液体键盘等）沿用 trime.yaml 里的定义。
+#
+# 布局里各键的长按、上滑功能：
+#   字母键  上滑输入数字（第一排）、长按输入符号，键帽右上角有小字提示
+#   z       长按输入 `，虎码里用来进入自然码双拼反查
+#   中/英   单击切换中英文，长按弹出方案选单，上滑切换输入法
+#   123     单击切换到数字键盘，长按打开 emoji
+
+__include: trime:/
+
+__patch:
+  name: iOS
+  author: InsHomePgup
+
+  # ---------------------------------------------------------------- 样式
+  style/key_height: 46
+  style/keyboard_height: 236       # 整个键盘区高度（dp），四行按比例分配
+  style/keyboard_height_land: 180
+  style/horizontal_gap: 6          # 键间距（dp），iOS 约 6pt
+  style/vertical_gap: 11           # 行间距（dp），iOS 约 11pt
+  style/keyboard_padding: 3        # 左右留白
+  style/round_corner: 6            # 按键圆角
+  style/key_border: 0
+  style/shadow_radius: 0.0
+  style/key_text_size: 23
+  style/label_text_size: 23
+  style/key_long_text_size: 16     # 「空格」「换行」「123」等多字标签
+  style/symbol_text_size: 9        # 键帽右上角的长按提示
+  style/candidate_text_size: 20
+  style/candidate_view_height: 34
+  style/comment_text_size: 11
+  style/preview_height: 56
+  style/preview_text_size: 32
+  style/preview_offset: -8
+  style/enter_labels/default: 换行
+  style/enter_labels/go: 前往
+  style/enter_labels/search: 搜索
+  style/enter_labels/send: 发送
+  style/enter_labels/done: 完成
+  style/enter_labels/next: 下一项
+
+  # ---------------------------------------------------------------- 配色
+  # default 是默认配色；dark_scheme 指定系统深色模式时用的配色
+  preset_color_schemes/default:
+    name: iOS 浅色
+    author: InsHomePgup
+    dark_scheme: ios_dark
+    keyboard_back_color: 0xd1d4da       # 键盘底色
+    back_color: 0xd1d4da                # 候选栏底色
+    text_back_color: 0xf2f2f7           # 悬浮编码窗口底色
+    border_color: 0xd1d4da
+    candidate_separator_color: 0xd1d4da
+    text_color: 0x000000                # 编码
+    hilited_text_color: 0x007aff
+    hilited_back_color: 0xf2f2f7
+    candidate_text_color: 0x000000
+    comment_text_color: 0x8e8e93
+    label_color: 0x8e8e93
+    hilited_candidate_text_color: 0x000000
+    hilited_candidate_back_color: 0xffffff
+    hilited_comment_text_color: 0x8e8e93
+    hilited_label_color: 0x8e8e93
+    key_back_color: 0xffffff            # 字母键
+    key_text_color: 0x000000
+    key_symbol_color: 0x8e8e93          # 长按提示小字
+    hilited_key_back_color: 0xabb0bc    # 字母键按下
+    hilited_key_text_color: 0x000000
+    hilited_key_symbol_color: 0x8e8e93
+    off_key_back_color: 0xabb0bc        # 功能键（Shift、删除、123、换行…）
+    off_key_text_color: 0x000000
+    hilited_off_key_back_color: 0xffffff
+    hilited_off_key_text_color: 0x000000
+    on_key_back_color: 0xffffff         # 开启状态的功能键（Shift 锁定、英文模式）
+    on_key_text_color: 0x000000
+    hilited_on_key_back_color: 0xabb0bc
+    hilited_on_key_text_color: 0x000000
+    preview_back_color: 0xffffff        # 按键气泡
+    preview_text_color: 0x000000
+    shadow_color: 0x00000000
+    long_text_back_color: 0xffffff
+
+  preset_color_schemes/ios_dark:
+    name: iOS 深色
+    author: InsHomePgup
+    light_scheme: default
+    keyboard_back_color: 0x2b2b2d
+    back_color: 0x2b2b2d
+    text_back_color: 0x1c1c1e
+    border_color: 0x2b2b2d
+    candidate_separator_color: 0x2b2b2d
+    text_color: 0xffffff
+    hilited_text_color: 0x0a84ff
+    hilited_back_color: 0x1c1c1e
+    candidate_text_color: 0xffffff
+    comment_text_color: 0x98989f
+    label_color: 0x98989f
+    hilited_candidate_text_color: 0xffffff
+    hilited_candidate_back_color: 0x6b6b6e
+    hilited_comment_text_color: 0x98989f
+    hilited_label_color: 0x98989f
+    key_back_color: 0x6b6b6e
+    key_text_color: 0xffffff
+    key_symbol_color: 0x98989f
+    hilited_key_back_color: 0x464648
+    hilited_key_text_color: 0xffffff
+    hilited_key_symbol_color: 0x98989f
+    off_key_back_color: 0x464648
+    off_key_text_color: 0xffffff
+    hilited_off_key_back_color: 0x6b6b6e
+    hilited_off_key_text_color: 0xffffff
+    on_key_back_color: 0xd8d8dc
+    on_key_text_color: 0x000000
+    hilited_on_key_back_color: 0x6b6b6e
+    hilited_on_key_text_color: 0xffffff
+    preview_back_color: 0x6b6b6e
+    preview_text_color: 0xffffff
+    shadow_color: 0x00000000
+    long_text_back_color: 0x6b6b6e
+
+  # ---------------------------------------------------------------- 按键
+  # functional: true 的键用 off_key_* 配色（灰色功能键），否则当作字母键（白色）
+  preset_keys/ios_shift: {label: ⇧, send: Shift_L, shift_lock: ascii_long, functional: true}
+  preset_keys/ios_backspace: {label: ⌫, repeatable: true, send: BackSpace, functional: true}
+  preset_keys/ios_space: {label: 空格, repeatable: false, functional: false, send: space}
+  preset_keys/ios_return: {label: enter_labels, send: Return, functional: true}
+  preset_keys/ios_confirm: {label: 确认, send: Return, functional: true}  # 有编码时：编码原样上屏
+  preset_keys/ios_mode: {toggle: ascii_mode, send: Mode_switch, states: [中, 英], functional: true}
+  preset_keys/ios_123: {label: '123', send: Eisu_toggle, select: ios_number, functional: true}
+  preset_keys/ios_more: {label: '#+=', send: Eisu_toggle, select: ios_symbols, functional: true}
+  preset_keys/ios_abc: {label: ABC, send: Eisu_toggle, select: .default, functional: true}
+  preset_keys/ios_cut: {label: 剪切, send: Control+x}
+  preset_keys/ios_copy: {label: 复制, send: Control+c}
+  preset_keys/ios_paste: {label: 粘贴, send: Control+v}
+  preset_keys/ios_menu: {label: 方案, send: Menu}
+
+  # ---------------------------------------------------------------- 键盘布局
+  # 虎码、双拼的字母表里带 ; ` 等符号，Trime 会选用名为 default 的布局，
+  # 所以直接把 default 换成 iOS 26 键。letter（英文专用）沿用 default。
+  preset_keyboards/default:
+    name: iOS 26 键
+    author: InsHomePgup
+    ascii_mode: 0
+    width: 10
+    height: 46
+    lock: true
+    keys:
+    # 第一排
+    - {click: q, long_click: '!', swipe_up: '1'}
+    - {click: w, long_click: '@', swipe_up: '2'}
+    - {click: e, long_click: '#', swipe_up: '3'}
+    - {click: r, long_click: '$', swipe_up: '4'}
+    - {click: t, long_click: '%', swipe_up: '5'}
+    - {click: y, long_click: '^', swipe_up: '6'}
+    - {click: u, long_click: '&', swipe_up: '7'}
+    - {click: i, long_click: '*', swipe_up: '8'}
+    - {click: o, long_click: '(', swipe_up: '9'}
+    - {click: p, long_click: ')', swipe_up: '0'}
+    # 第二排（两侧各留半个键）
+    - {width: 5}
+    - {click: a, long_click: '~', swipe_left: Left, swipe_right: Right}
+    - {click: s, long_click: '-', swipe_left: Home, swipe_right: End}
+    - {click: d, long_click: '_'}
+    - {click: f, long_click: '+'}
+    - {click: g, long_click: '='}
+    - {click: h, long_click: '[', swipe_up: ']'}
+    - {click: j, long_click: '{', swipe_up: '}'}
+    - {click: k, long_click: ':'}
+    - {click: l, long_click: ';'}
+    - {width: 5}
+    # 第三排
+    - {click: ios_shift, send_bindings: false, width: 13}
+    - {width: 2}
+    - {click: z, long_click: '`'}
+    - {click: x, long_click: ios_cut}
+    - {click: c, long_click: ios_copy}
+    - {click: v, long_click: ios_paste}
+    - {click: b, long_click: '\'}
+    - {click: n, long_click: '"'}
+    - {click: m, long_click: "'"}
+    - {width: 2}
+    - {click: ios_backspace, swipe_left: Escape, width: 13}
+    # 第四排（label_symbol 设成空格，隐藏功能键上的长按提示，保持 iOS 的干净外观）
+    - {click: ios_123, long_click: liquid_keyboard_emoji, label_symbol: ' ', width: 12.5}
+    - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, label_symbol: ' ', width: 12.5}
+    - {click: ios_space, width: 50}
+    - {click: ios_return, composing: ios_confirm, long_click: CommitComment, label_symbol: ' ', width: 25}
+
+  preset_keyboards/ios_number:
+    name: iOS 数字
+    author: InsHomePgup
+    width: 10
+    height: 46
+    keys:
+    - {click: '1'}
+    - {click: '2'}
+    - {click: '3'}
+    - {click: '4'}
+    - {click: '5'}
+    - {click: '6'}
+    - {click: '7'}
+    - {click: '8'}
+    - {click: '9'}
+    - {click: '0'}
+    - {click: '-'}
+    - {click: '/'}
+    - {click: ':'}
+    - {click: ';'}
+    - {click: '('}
+    - {click: ')'}
+    - {click: '$'}
+    - {click: '&'}
+    - {click: '@'}
+    - {click: '"'}
+    - {click: ios_more, width: 13}
+    - {width: 2}
+    - {click: '.', width: 14}
+    - {click: ',', width: 14}
+    - {click: '?', width: 14}
+    - {click: '!', width: 14}
+    - {click: "'", width: 14}
+    - {width: 2}
+    - {click: ios_backspace, width: 13}
+    - {click: ios_abc, width: 12.5}
+    - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, label_symbol: " ", width: 12.5}
+    - {click: ios_space, width: 50}
+    - {click: ios_return, composing: ios_confirm, width: 25}
+
+  preset_keyboards/ios_symbols:
+    name: iOS 符号
+    author: InsHomePgup
+    width: 10
+    height: 46
+    keys:
+    - {click: '['}
+    - {click: ']'}
+    - {click: '{'}
+    - {click: '}'}
+    - {click: '#'}
+    - {click: '%'}
+    - {click: '^'}
+    - {click: '*'}
+    - {click: '+'}
+    - {click: '='}
+    - {click: '_'}
+    - {click: '\'}
+    - {click: '|'}
+    - {click: '~'}
+    - {click: '<'}
+    - {click: '>'}
+    - {click: '`'}
+    - {click: '·'}
+    - {click: '…'}
+    - {click: '¥'}
+    - {click: ios_123, width: 13}
+    - {width: 2}
+    - {click: '.', width: 14}
+    - {click: ',', width: 14}
+    - {click: '?', width: 14}
+    - {click: '!', width: 14}
+    - {click: "'", width: 14}
+    - {width: 2}
+    - {click: ios_backspace, width: 13}
+    - {click: ios_abc, width: 12.5}
+    - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, label_symbol: " ", width: 12.5}
+    - {click: ios_space, width: 50}
+    - {click: ios_return, composing: ios_confirm, width: 25}
