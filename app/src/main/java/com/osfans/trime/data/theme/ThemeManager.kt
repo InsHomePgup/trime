@@ -29,6 +29,10 @@ object ThemeManager {
 
     private lateinit var _activeTheme: Theme
 
+    /** 主题要等 Rime 就绪后才初始化，在此之前不能访问 [activeTheme] */
+    val isInitialized: Boolean
+        get() = ::_activeTheme.isInitialized
+
     var activeTheme: Theme
         get() = _activeTheme
         private set(value) {

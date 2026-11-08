@@ -188,6 +188,14 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                 ThemeManager.addOnChangedListener(onThemeChangeListener)
                 ColorManager.addOnChangedListener(onColorChangeListener)
             }
+            // 刚安装或更新后 Rime 要先同步数据，期间系统可能已经要求显示键盘，
+            // 那时 onCreateInputView 因主题未初始化而跳过了，这里补建键盘
+            if (inputView == null) {
+                replaceInputViews(ThemeManager.activeTheme)
+                if (currentInputStarted) {
+                    inputView?.startInput(currentInputEditorInfo, false)
+                }
+            }
         }
         InputFeedbackManager.init(this)
         registerReceiver()
@@ -482,7 +490,11 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
     override fun onCreateInputView(): View? {
         Timber.d("onCreateInputView")
-        replaceInputViews(ThemeManager.activeTheme)
+        // 主题未初始化（Rime 还没就绪）时先不建键盘，等 onCreate 里的初始化完成后再补建，
+        // 否则会因访问未初始化的 activeTheme 而崩溃
+        if (ThemeManager.isInitialized) {
+            replaceInputViews(ThemeManager.activeTheme)
+        }
         // We will call `setInputView` by ourselves. This is fine.
         return null
     }
