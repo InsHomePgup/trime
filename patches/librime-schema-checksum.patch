@@ -1,0 +1,44 @@
+diff --git a/src/rime/dict/dict_compiler.cc b/src/rime/dict/dict_compiler.cc
+index 5996ee2c..56ec1383 100644
+--- a/src/rime/dict/dict_compiler.cc
++++ b/src/rime/dict/dict_compiler.cc
+@@ -77,6 +77,30 @@ static uint32_t compute_dict_file_checksum(uint32_t initial_checksum,
+   return cc.Checksum();
+ }
+ 
++// Checksum of a compiled schema, ignoring the leading `__build_info` block.
++// __build_info records source file timestamps, which differ between the
++// machine that prebuilds the data and the device, so prebuilt prisms would
++// otherwise always be considered outdated.
++static uint32_t compute_schema_file_checksum(const path& schema_file) {
++  std::ifstream fin(schema_file.c_str(), std::ios::binary);
++  if (!fin) {
++    return Checksum(schema_file);
++  }
++  boost::crc_32_type crc;
++  std::string line;
++  bool in_build_info = false;
++  while (std::getline(fin, line)) {
++    if (!line.empty() && line[0] != ' ' && line[0] != '\t') {
++      in_build_info = line.rfind("__build_info:", 0) == 0;
++    }
++    if (!in_build_info) {
++      line.push_back('\n');
++      crc.process_bytes(line.data(), line.size());
++    }
++  }
++  return crc.checksum();
++}
++
+ bool DictCompiler::Compile(const path& schema_file) {
+   LOG(INFO) << "compiling dictionary for " << schema_file;
+   bool build_table_from_source = true;
+@@ -97,7 +121,7 @@ bool DictCompiler::Compile(const path& schema_file) {
+   uint32_t dict_file_checksum =
+       compute_dict_file_checksum(0, dict_files, settings);
+   uint32_t schema_file_checksum =
+-      schema_file.empty() ? 0 : Checksum(schema_file);
++      schema_file.empty() ? 0 : compute_schema_file_checksum(schema_file);
+   bool rebuild_table = false;
+   bool rebuild_prism = false;
+   const auto& primary_table = tables_[0];

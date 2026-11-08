@@ -473,6 +473,8 @@ keystore.properties
 # Project
 app/src/main/assets/checksums.json
 app/src/main/assets/shared/opencc
+# 预编译的词库（script/prebuild-rime-data.sh 生成）
+app/src/main/assets/shared/build
 
 # boost
 app/boost-*.tar.xz

@@ -46,8 +46,11 @@ style-lint: spotlessCheck clang-format-lint
 
 style-apply: spotlessApply clang-format
 
+# librime 补丁：方案校验和忽略 __build_info，让电脑上预编译的词库在手机上直接可用（已打过则跳过）
 patch-apply:
 	-git apply --directory=$(jniDir)/librime-lua-deps patches/lua.patch
+	git -C $(jniDir)/librime apply --reverse --check $(CURDIR)/patches/librime-schema-checksum.patch 2>/dev/null \
+		|| git -C $(jniDir)/librime apply $(CURDIR)/patches/librime-schema-checksum.patch
 
 debug: patch-apply
 	$(GRADLEW) :app:assembleDebug

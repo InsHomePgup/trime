@@ -84,6 +84,13 @@ jobs:
           keyPassword=${{ secrets.KEY_PASSWORD }}
           EOF
 
+      - name: Prebuild Rime data
+        # 在 CI 上预先编译词库并打包进 APK，装完不用等部署（见 script/prebuild-rime-data.sh）
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libboost-regex-dev
+          script/prebuild-rime-data.sh
+
       - name: Build Trime
         run: make release
 
