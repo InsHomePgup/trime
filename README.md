@@ -124,7 +124,7 @@ Android 模拟器请用 Android 11 及以上的镜像，它们自带 ARM 转译�
    `recipe.yaml`、`opencc` 会被跳过
 4. `git add -A && git commit -m "update myrime" && git push`
 5. 到 GitHub 的 [Actions → Release](https://github.com/InsHomePgup/trime/actions/workflows/release-ci.yml)
-   页面点 **Run workflow**，分支选 `develop`，填版本号（接着上一个 Release 往下编，如 `v1.0.2`）。
+   页面点 **Run workflow**，分支选 `main`，填版本号（接着上一个 Release 往下编，如 `v1.0.2`）。
    工作流会自动在该分支最新提交上打 tag；如果填的是已存在的 tag，则重新构建那个版本并更新 Release
 6. 等工作流跑完（约 15–20 分钟），新 APK 会出现在
    [Releases](https://github.com/InsHomePgup/trime/releases) 页面
