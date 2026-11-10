@@ -22,6 +22,13 @@ interface RimeApi {
 
     val paging: Boolean
 
+    /**
+     * 不切换线程、不阻塞地读取运行时选项，供界面绘制使用。
+     * 值来自 Rime 的选项变化通知；从未设置过的选项返回 false，和 Rime 本身一致。
+     * 需要确切值（非绘制场景）时仍用 [getRuntimeOption]。
+     */
+    fun getRuntimeOptionCached(option: String): Boolean
+
     suspend fun isEmpty(): Boolean
 
     suspend fun deploy()

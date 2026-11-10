@@ -379,8 +379,9 @@ class KeyView(
     }
 
     private fun drawSymbol(canvas: Canvas, text: String, isTop: Boolean = true) {
-        val showSymbol = rime.run { !getRuntimeOption("_hide_key_symbol") }
-        val showHint = rime.run { !getRuntimeOption("_hide_key_hint") }
+        // 绘制时只读缓存，不能等 Rime 线程（它可能正在处理按键）
+        val showSymbol = rime.run { !getRuntimeOptionCached("_hide_key_symbol") }
+        val showHint = rime.run { !getRuntimeOptionCached("_hide_key_hint") }
 
         if (isTop && !showSymbol) return
         if (!isTop && !showHint) return

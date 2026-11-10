@@ -12,6 +12,7 @@ import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.ime.core.InlinePreeditMode
 import com.osfans.trime.util.appContext
 import com.osfans.trime.util.isStorageAvailable
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
@@ -51,6 +52,16 @@ class Rime :
 
     override var paging: Boolean = false
         private set
+
+    /** 运行时选项缓存，由选项变化通知更新，见 [getRuntimeOptionCached] */
+    private val runtimeOptionsCached = ConcurrentHashMap<String, Boolean>()
+
+    override fun getRuntimeOptionCached(option: String): Boolean = when (option) {
+        "ascii_mode" -> statusCached.isAsciiMode
+        "ascii_punct" -> statusCached.isAsciiPunct
+        "full_shape" -> statusCached.isFullShape
+        else -> runtimeOptionsCached[option] ?: false
+    }
 
     private val dispatcher =
         RimeDispatcher(
@@ -292,6 +303,7 @@ class Rime :
                 schemaCached = RimeSchema(it.data.id)
             }
             is RimeMessage.OptionMessage -> {
+                runtimeOptionsCached[it.data.option] = it.data.value
                 // Option change won't trigger response update
                 val status = getRimeStatus()
                 statusCached = status
@@ -302,6 +314,8 @@ class Rime :
             }
             is RimeMessage.DeployMessage -> {
                 if (it.data == RimeMessage.DeployMessage.State.Start) {
+                    // 部署会重建会话，选项全部回到默认值，之后的选项通知会重新填充
+                    runtimeOptionsCached.clear()
                     OpenCCDictManager.buildOpenCCDict()
                 }
             }
@@ -366,6 +380,7 @@ class Rime :
             Timber.w("Skip starting rime: not at stopped state!")
             return
         }
+        runtimeOptionsCached.clear()
         registerRimeMessageHandler(::handleRimeMessage)
         lifecycleRegistry.emitState(RimeLifecycle.State.STARTING)
         dispatcher.start()

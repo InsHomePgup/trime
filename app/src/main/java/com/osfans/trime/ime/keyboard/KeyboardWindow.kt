@@ -66,7 +66,10 @@ class KeyboardWindow :
 
     private lateinit var keyboardView: FrameLayout
 
-    companion object : ResidentWindow.Key
+    companion object : ResidentWindow.Key {
+        /** 会改变所有键标签的选项 */
+        private val FULL_REDRAW_OPTIONS = setOf("ascii_mode", "ascii_punct", "_hide_key_symbol", "_hide_key_hint")
+    }
 
     override val key: ResidentWindow.Key
         get() = KeyboardWindow
@@ -312,6 +315,8 @@ class KeyboardWindow :
 
     override fun onRimeSchemaUpdated(schema: SchemaItem) {
         switchKeyboard(".default")
+        // 方案名可能显示在键上（如空格键）；切换方案很少发生，直接全部重画
+        ContextCompat.getMainExecutor(service).execute { currentKeyboardView?.invalidateAllKeys() }
     }
 
     override fun onRimeOptionUpdated(value: RimeMessage.OptionMessage.Data) {
@@ -332,7 +337,25 @@ class KeyboardWindow :
                 }
             }
         }
-        currentKeyboardView?.invalidateAllKeys()
+        invalidateKeysForOption(option)
+    }
+
+    /**
+     * 选项变化后只重画受影响的键。
+     * 中英文、中英标点、角标显示开关会影响所有键的标签，要全部重画；
+     * 其他选项只影响以它为 toggle 的键（如「中/英」这类状态键）。
+     */
+    private fun invalidateKeysForOption(option: String) {
+        val view = currentKeyboardView ?: return
+        if (option in FULL_REDRAW_OPTIONS) {
+            view.invalidateAllKeys()
+            return
+        }
+        currentKeyboard?.keys?.forEachIndexed { index, key ->
+            if (key.keyActions.values.any { it.toggle == option }) {
+                view.invalidateKeyByIndex(index)
+            }
+        }
     }
 
     override fun onAttached() {
