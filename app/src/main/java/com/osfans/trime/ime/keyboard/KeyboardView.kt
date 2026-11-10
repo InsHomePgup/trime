@@ -10,7 +10,6 @@ import android.content.Context
 import android.graphics.Canvas
 import android.widget.FrameLayout
 import androidx.core.view.children
-import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.broadcast.EnterKeyDisplayDelegate
 import com.osfans.trime.ime.core.TrimeInputMethodService
@@ -35,7 +34,6 @@ class KeyboardView(
     internal val keyTextSize = theme.generalStyle.keyTextSize
     internal val keyLongTextSize = theme.generalStyle.keyLongTextSize.takeIf { it > 0 } ?: keyTextSize
     internal val symbolTextSize = theme.generalStyle.symbolTextSize.takeIf { it > 0 } ?: keyTextSize
-    internal val popupOnKeyPress by AppPrefs.defaultInstance().keyboard.popupOnKeyPress
 
     init {
         setWillNotDraw(false)

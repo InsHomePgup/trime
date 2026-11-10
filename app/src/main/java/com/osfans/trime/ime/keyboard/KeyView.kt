@@ -277,7 +277,9 @@ class KeyView(
     }
 
     private fun showPopupPreview(behavior: KeyBehavior = KeyBehavior.CLICK) {
-        if (!keyboardView.popupOnKeyPress) return
+        // 按键气泡暂时整体关闭，不读「按键弹出预览」设置：现在的样子离 iOS 太远，
+        // 而设置页会把旧版的默认值「开」存下来，改默认值关不掉。见 docs/ios-parity-backlog.md
+        if (!KEY_PREVIEW_ENABLED) return
         // 和 iOS 一样，功能键（空格、Shift、退格、换行、切换键盘等）不弹气泡
         val click = key.click
         if (behavior == KeyBehavior.CLICK && (click?.isFunctional == true || click?.code == KeyEvent.KEYCODE_SPACE)) return
@@ -492,6 +494,9 @@ class KeyView(
     companion object {
         /** 长按退格连删多少次后改为整词删除（约 1.5 秒） */
         private const val WORD_DELETE_AFTER_REPEATS = 20
+
+        /** 按键气泡总开关，等做出 iOS 的气泡样式后再打开 */
+        private const val KEY_PREVIEW_ENABLED = false
 
         private const val SHIFT_ICON_OFF = "ic@arrow_up_bold_outline"
         private const val SHIFT_ICON_ON = "ic@arrow_up_bold"
