@@ -122,12 +122,28 @@ Android 模拟器请用 Android 11 及以上的镜像，它们自带 ARM 转译�
    `script/link-custom-data.sh` 补建符号链接（已有文件内容的更新、子目录如 `lua/`、`opencc/`
    里的新增文件都不需要这步）。`.git`、`deploy.*`、`LICENSE`、`README.md`、`CLAUDE.md`、
    `recipe.yaml`、`opencc` 会被跳过
-4. `git add -A && git commit -m "update myrime" && git push`
-5. 到 GitHub 的 [Actions → Release](https://github.com/InsHomePgup/trime/actions/workflows/release-ci.yml)
-   页面点 **Run workflow**，分支选 `main`，填版本号（接着上一个 Release 往下编，如 `v1.0.2`）。
-   工作流会自动在该分支最新提交上打 tag；如果填的是已存在的 tag，则重新构建那个版本并更新 Release
-6. 等工作流跑完（约 15–20 分钟），新 APK 会出现在
-   [Releases](https://github.com/InsHomePgup/trime/releases) 页面
+4. `git add app/data/rime/myrime && git commit -m "chore: update myrime"`。
+   如果 MyRimeConfig 改了词库，先跑 `script/prebuild-rime-data.sh` 重新预编译（产物不提交，
+   本地打包和 CI 都会用到最新的）
+5. 发版本：在仓库根目录运行全局安装的 [release-it](https://github.com/release-it/release-it)（配置在 `.release-it.json`）：
+   ```
+   release-it            # 交互式确认版本号
+   release-it --ci       # 直接按提交类型自动定版本
+   release-it --dry-run  # 只看会发什么版本、生成什么更新日志，不做任何改动
+   ```
+   它会按 Conventional Commits 决定版本号（有 `feat` 升次版本号，如 1.0.3 → 1.1.0；
+   只有 `fix` 等升修订号），把这次的改动写进 `CHANGELOG.md`，提交 `chore: 发布 vX.Y.Z`，
+   打 tag 并推送。只认 `v1.*` 的 tag，上游的 `v3.3.x` 不参与计算。要求在 `main` 上、工作区干净
+6. 打包，二选一：
+   - **本地**（约半分钟，需要 `key/` 和 `keystore.properties`）：`BUILD_ABI=arm64-v8a ./gradlew assembleRelease`，
+     APK 在 `app/build/outputs/apk/release/`
+   - **GitHub**：到 [Actions → Release](https://github.com/InsHomePgup/trime/actions/workflows/release-ci.yml)
+     点 **Run workflow**，分支选 `main`，版本号填 release-it 刚发的那个（如 `v1.1.0`）。tag 已经存在，
+     工作流会直接构建它并创建 Release，约 15–20 分钟后 APK 出现在
+     [Releases](https://github.com/InsHomePgup/trime/releases) 页面
+
+本仓库自己的更新日志是 `CHANGELOG.md`（从 v1.1.0 开始）；上游 osfans/trime 原来的更新日志移到了
+`docs/CHANGELOG-upstream.md`。
 
 所有工作流都只在 ubuntu 上跑，并且**只能手动触发**，push 不会自动构建。想在发正式版之前先试一下，可以
 在 [Actions → Commit](https://github.com/InsHomePgup/trime/actions/workflows/commit-ci.yml) 页面点
