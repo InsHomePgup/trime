@@ -33,6 +33,8 @@ data class TextKeyboard(
     val columns: Int,
     val asciiMode: Boolean,
     val resetAsciiMode: Boolean,
+    /** 切到这个键盘时不改变中英文状态（如数字、符号页），忽略 ascii_mode / reset_ascii_mode */
+    val keepAsciiMode: Boolean,
     val labelTransform: LabelTransform,
     val lock: Boolean,
     val asciiKeyboard: String,
@@ -141,6 +143,7 @@ data class TextKeyboard(
             columns = node["columns"]?.int ?: 30,
             asciiMode = (node["ascii_mode"]?.int ?: 1) == 1,
             resetAsciiMode = node["reset_ascii_mode"]?.boolean ?: false,
+            keepAsciiMode = node["keep_ascii_mode"]?.boolean ?: false,
             labelTransform = node["label_transform"]?.enum<LabelTransform>() ?: LabelTransform.NONE,
             lock = node["lock"]?.boolean ?: false,
             asciiKeyboard = node["ascii_keyboard"]?.string ?: "",

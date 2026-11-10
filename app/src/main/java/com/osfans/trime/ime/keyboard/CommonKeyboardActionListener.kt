@@ -139,7 +139,16 @@ class CommonKeyboardActionListener {
             override fun onAction(action: KeyAction) {
                 val shouldHandle = when {
                     action.commit.isNotEmpty() -> {
-                        service.commitText(action.commit)
+                        val text = action.commit
+                        if (rime.run { statusCached }.isComposing) {
+                            // 有未上屏的编码：先上屏首选，再上屏这段文字（同一队列里保证顺序）
+                            service.postRimeJob {
+                                commitComposition()
+                                service.commitText(text)
+                            }
+                        } else {
+                            service.commitText(text)
+                        }
                         false
                     }
                     KeyboardSwitcher.currentKeyboard.let { keyboard ->

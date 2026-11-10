@@ -135,7 +135,12 @@ class KeyboardWindow :
         return config
     }
 
-    private fun attachKeyboard(target: String) {
+    /**
+     * @param keepAsciiMode 为 true 时不按键盘配置切换中英文。
+     *   切到或切离 keep_ascii_mode 的键盘（数字、符号页）时都保持当前状态，
+     *   这样在数字页切了中英文，回到字母页后也保持一致。
+     */
+    private fun attachKeyboard(target: String, keepAsciiMode: Boolean = false) {
         currentKeyboardId = target
         lastKeyboardId = target
 
@@ -156,7 +161,7 @@ class KeyboardWindow :
             val currentMode = rime.run { statusCached }.isAsciiMode
             val targetMode = if (it.resetAsciiMode) it.asciiMode else it.lastAsciiMode
 
-            if (currentMode != targetMode) {
+            if (!keepAsciiMode && !it.keepAsciiMode && currentMode != targetMode) {
                 service.postRimeJob {
                     commitComposition()
                     setRuntimeOption("ascii_mode", targetMode)
@@ -231,8 +236,9 @@ class KeyboardWindow :
             if (cachedKeyboards.containsKey(target)) {
                 if (target == currentKeyboardId) return@execute
             }
+            val leavingKeepModeKeyboard = currentKeyboard?.keepAsciiMode == true
             detachCurrentView()
-            attachKeyboard(target)
+            attachKeyboard(target, leavingKeepModeKeyboard)
         }
         Timber.d("Switched to keyboard: $target")
     }

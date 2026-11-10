@@ -332,7 +332,32 @@ class KeyView(
             val fontMetrics = textPaint.fontMetrics
             val adjustmentY = -(fontMetrics.ascent + fontMetrics.descent) / 2f
 
-            canvas.drawText(label, centerX + sp(key.keyTextOffsetX), centerY + adjustmentY + sp(key.keyTextOffsetY), textPaint)
+            canvas.drawText(label, centerX + glyphCenterOffset(label) + sp(key.keyTextOffsetX), centerY + adjustmentY + sp(key.keyTextOffsetY), textPaint)
+        }
+    }
+
+    private val glyphBounds = android.graphics.Rect()
+
+    /**
+     * 全角标点（（）“”等）的字形在字宽里偏向一侧，按字宽居中会显得歪。
+     * 单个非 ASCII 字符按实际字形的左右边界居中。
+     */
+    private fun glyphCenterOffset(label: String): Float {
+        if (label.isEmpty() || label.codePointCount(0, label.length) != 1 || label[0] < '\u0080') return 0f
+        textPaint.getTextBounds(label, 0, label.length, glyphBounds)
+        if (glyphBounds.isEmpty) return 0f
+        val advance = textPaint.measureText(label)
+        // textAlign 是 CENTER：字宽中心在 x 处，字形中心在 x - advance/2 + (left+right)/2
+        return advance / 2f - (glyphBounds.left + glyphBounds.right) / 2f
+    }
+
+    /** Shift 键按状态换图标：未按 → 空心箭头，一次性大写 → 实心箭头，锁定 → 大写锁定 */
+    private fun shiftStateIcon(label: String): String {
+        if (label != SHIFT_ICON_OFF) return label
+        return when {
+            key.isOn -> SHIFT_ICON_LOCKED
+            keyboard.isShifted -> SHIFT_ICON_ON
+            else -> label
         }
     }
 

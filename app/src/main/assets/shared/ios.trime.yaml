@@ -15,6 +15,10 @@
 #   z       长按输入 `，虎码里用来进入自然码双拼反查
 #   中/英   单击切换中英文，长按弹出方案选单，上滑切换输入法，下滑调整键盘高度
 #   123     单击切换到数字键盘，长按打开 emoji
+#
+# 数字、符号页保持当前中英文状态（keep_ascii_mode）。符号键 click 是中文标点、ascii 是英文标点，
+# 键帽跟着中英文切换；中文标点直接上屏（不走方案的标点表，避免虎码弹出符号选单），
+# 有未上屏的编码时会先上屏首选。
 
 __include: trime:/
 
@@ -142,6 +146,19 @@ __patch:
   preset_keys/ios_copy: {label: 复制, send: Control+c}
   preset_keys/ios_paste: {label: 粘贴, send: Control+v}
   preset_keys/ios_menu: {label: 方案, send: Menu}
+  # 中文状态下直接上屏的半角符号（不走方案的标点表，虎码会把它们映射成符号选单）
+  preset_keys/ios_cn_period: {label: '.', commit: '.'}
+  preset_keys/ios_cn_minus: {label: '-', commit: '-'}
+  preset_keys/ios_cn_slash: {label: '/', commit: '/'}
+  preset_keys/ios_cn_at: {label: '@', commit: '@'}
+  preset_keys/ios_cn_hash: {label: '#', commit: '#'}
+  preset_keys/ios_cn_percent: {label: '%', commit: '%'}
+  preset_keys/ios_cn_caret: {label: '^', commit: '^'}
+  preset_keys/ios_cn_asterisk: {label: '*', commit: '*'}
+  preset_keys/ios_cn_plus: {label: '+', commit: '+'}
+  preset_keys/ios_cn_equal: {label: '=', commit: '='}
+  preset_keys/ios_cn_backslash: {label: '\', commit: '\'}
+  preset_keys/ios_cn_bar: {label: '|', commit: '|'}
   preset_keys/ios_resize: {label: 调整高度, send: function, command: resize_keyboard}
 
   # ---------------------------------------------------------------- 键盘布局
@@ -199,6 +216,7 @@ __patch:
   preset_keyboards/ios_number:
     name: iOS 数字
     author: InsHomePgup
+    keep_ascii_mode: true   # 切过来时保持当前中英文：中文出中文标点，英文出英文标点
     width: 10
     height: 46
     keys:
@@ -212,25 +230,25 @@ __patch:
     - {click: '8'}
     - {click: '9'}
     - {click: '0'}
-    - {click: '-'}
-    - {click: '/'}
-    - {click: ':'}
-    - {click: ';'}
-    - {click: '('}
-    - {click: ')'}
-    - {click: '$'}
-    - {click: '&'}
-    - {click: '@'}
-    - {click: '"'}
-    - {click: ios_more, width: 13}
-    - {width: 2}
-    - {click: '.', width: 14}
-    - {click: ',', width: 14}
-    - {click: '?', width: 14}
-    - {click: '!', width: 14}
-    - {click: "'", width: 14}
-    - {width: 2}
-    - {click: ios_backspace, width: 13}
+    - {click: ios_cn_minus, ascii: '-'}
+    - {click: ios_cn_slash, ascii: '/'}
+    - {click: '：', ascii: ':'}
+    - {click: '；', ascii: ';'}
+    - {click: '（', ascii: '('}
+    - {click: '）', ascii: ')'}
+    - {click: '￥', ascii: '$'}
+    - {click: ios_cn_at, ascii: '&'}
+    - {click: '“', ascii: '@'}
+    - {click: '”', ascii: '"'}
+    # 第三排：两侧功能键和 6 个标点一样宽（iOS 中文：。，、？！.）
+    - {click: ios_more, width: 12.5}
+    - {click: '。', ascii: '.', width: 12.5}
+    - {click: '，', ascii: ',', width: 12.5}
+    - {click: '、', ascii: '?', width: 12.5}
+    - {click: '？', ascii: '!', width: 12.5}
+    - {click: '！', ascii: "'", width: 12.5}
+    - {click: ios_cn_period, ascii: '"', width: 12.5}   # iOS 中文第六个是半角句点
+    - {click: ios_backspace, width: 12.5}
     - {click: ios_abc, width: 12.5}
     - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, swipe_down: ios_resize, label_symbol: " ", width: 12.5}
     - {click: ios_space, width: 50}
@@ -239,38 +257,39 @@ __patch:
   preset_keyboards/ios_symbols:
     name: iOS 符号
     author: InsHomePgup
+    keep_ascii_mode: true   # 切过来时保持当前中英文：中文出中文标点，英文出英文标点
     width: 10
     height: 46
     keys:
-    - {click: '['}
-    - {click: ']'}
-    - {click: '{'}
-    - {click: '}'}
-    - {click: '#'}
-    - {click: '%'}
-    - {click: '^'}
-    - {click: '*'}
-    - {click: '+'}
-    - {click: '='}
-    - {click: '_'}
-    - {click: '\'}
-    - {click: '|'}
-    - {click: '~'}
-    - {click: '<'}
-    - {click: '>'}
-    - {click: '`'}
-    - {click: '·'}
-    - {click: '…'}
+    - {click: '【', ascii: '['}
+    - {click: '】', ascii: ']'}
+    - {click: '｛', ascii: '{'}
+    - {click: '｝', ascii: '}'}
+    - {click: ios_cn_hash, ascii: '#'}
+    - {click: ios_cn_percent, ascii: '%'}
+    - {click: ios_cn_caret, ascii: '^'}
+    - {click: ios_cn_asterisk, ascii: '*'}
+    - {click: ios_cn_plus, ascii: '+'}
+    - {click: ios_cn_equal, ascii: '='}
+    - {click: '——', ascii: '_'}
+    - {click: ios_cn_backslash, ascii: '\'}
+    - {click: ios_cn_bar, ascii: '|'}
+    - {click: '～', ascii: '~'}
+    - {click: '《', ascii: '<'}
+    - {click: '》', ascii: '>'}
+    - {click: '「', ascii: '`'}
+    - {click: '」', ascii: '·'}
+    - {click: '……', ascii: '…'}
     - {click: '¥'}
-    - {click: ios_123, width: 13}
-    - {width: 2}
-    - {click: '.', width: 14}
-    - {click: ',', width: 14}
-    - {click: '?', width: 14}
-    - {click: '!', width: 14}
-    - {click: "'", width: 14}
-    - {width: 2}
-    - {click: ios_backspace, width: 13}
+    # 第三排：两侧功能键和 6 个标点一样宽（iOS 中文：。，、？！.）
+    - {click: ios_123, width: 12.5}
+    - {click: '。', ascii: '.', width: 12.5}
+    - {click: '，', ascii: ',', width: 12.5}
+    - {click: '、', ascii: '?', width: 12.5}
+    - {click: '？', ascii: '!', width: 12.5}
+    - {click: '！', ascii: "'", width: 12.5}
+    - {click: ios_cn_period, ascii: '"', width: 12.5}   # iOS 中文第六个是半角句点
+    - {click: ios_backspace, width: 12.5}
     - {click: ios_abc, width: 12.5}
     - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, swipe_down: ios_resize, label_symbol: " ", width: 12.5}
     - {click: ios_space, width: 50}
