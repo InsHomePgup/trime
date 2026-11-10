@@ -137,9 +137,9 @@ __patch:
 
   # ---------------------------------------------------------------- 按键
   # functional: true 的键用 off_key_* 配色（灰色功能键），否则当作字母键（白色）
-  preset_keys/ios_shift: {label: ⇧, send: Shift_L, shift_lock: ascii_long, functional: true}
-  preset_keys/ios_backspace: {label: ⌫, repeatable: true, send: BackSpace, functional: true}
-  preset_keys/ios_space: {label: 空格, repeatable: false, functional: false, send: space}
+  preset_keys/ios_shift: {label: 'ic@arrow_up_bold_outline', send: Shift_L, shift_lock: double, functional: true}  # 单击一次性大写，双击锁定
+  preset_keys/ios_backspace: {label: 'ic@backspace_outline', repeatable: true, send: BackSpace, functional: true}
+  preset_keys/ios_space: {label: 空格, repeatable: false, functional: false, slide_cursor: true, send: space}  # 按住左右拖动移光标
   preset_keys/ios_return: {label: enter_labels, send: Return, functional: true}
   preset_keys/ios_confirm: {label: 确认, send: Return, functional: true}  # 有编码时：编码原样上屏
   preset_keys/ios_mode: {toggle: ascii_mode, send: Mode_switch, states: [中, 英], functional: true}

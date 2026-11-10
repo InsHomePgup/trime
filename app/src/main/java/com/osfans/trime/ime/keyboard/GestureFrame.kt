@@ -237,13 +237,25 @@ open class GestureFrame(context: Context) : FrameLayout(context) {
         }
     }
 
+    /** 本次长按已经连发的次数，从 0 开始；松手后重置 */
+    var repeatCount = 0
+        private set
+
     private fun startRepeatJob() {
+        repeatCount = 0
         repeatJob = lifecycleScope.launch {
             try {
                 while (true) {
                     if (vibrateOnKeyRepeat) InputFeedbackManager.keyPressVibrate(this@GestureFrame)
                     dispatchBehavior(KeyBehavior.CLICK, true)
-                    delay(repeatInterval.toLong())
+                    repeatCount++
+                    // 像 iOS 一样越按越快：前 8 次原速，之后 0.6 倍间隔，20 次后 0.4 倍
+                    val factor = when {
+                        repeatCount < 8 -> 1.0
+                        repeatCount < 20 -> 0.6
+                        else -> 0.4
+                    }
+                    delay((repeatInterval * factor).toLong().coerceAtLeast(10L))
                 }
             } finally {
                 onCancel?.invoke()

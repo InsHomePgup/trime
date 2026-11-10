@@ -13,6 +13,7 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.drawable.GradientDrawable
+import android.os.SystemClock
 import android.view.KeyEvent
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.utils.sizeDp
@@ -49,6 +50,32 @@ class KeyView(
     }
 
     private val deletedTextBuffer = ArrayDeque<String>()
+
+    private var lastModifierTapTime = 0L
+
+    /**
+     * 长按退格一段时间后整词删除：英文、数字删到上一个单词开头（连同后面的空格），
+     * 其他字符（汉字、标点）仍然一次删一个。有编码、有选中文字时不处理，返回 false 交给原逻辑。
+     */
+    private fun deleteWordBeforeCursor(): Boolean {
+        if (rime.run { statusCached }.isComposing) return false
+        val ic = service.currentInputConnection ?: return false
+        if (!ic.getSelectedText(0).isNullOrEmpty()) return false
+        val before = ic.getTextBeforeCursor(64, 0)?.toString() ?: return false
+        if (before.isEmpty()) return false
+        var end = before.length
+        while (end > 0 && before[end - 1] == ' ') end--
+        var start = end
+        if (start > 0 && before[start - 1].let { it < '\u0080' && it.isLetterOrDigit() }) {
+            while (start > 0 && before[start - 1].let { it < '\u0080' && it.isLetterOrDigit() }) start--
+        } else if (start > 0) {
+            start -= if (start >= 2 && before[start - 1].isLowSurrogate() && before[start - 2].isHighSurrogate()) 2 else 1
+        }
+        val count = before.length - start
+        if (count <= 0) return false
+        ic.deleteSurroundingText(count, 0)
+        return true
+    }
 
     private var keyPressed = false
     override fun isPressed(): Boolean = keyPressed
@@ -107,7 +134,12 @@ class KeyView(
                     }
                     setPressedState(false)
                 } else if (isRepeatable) {
-                    key.getAction(KeyBehavior.CLICK)?.let { processKeyAction(it, KeyBehavior.CLICK) }
+                    key.getAction(KeyBehavior.CLICK)?.let {
+                        if (it.code == KeyEvent.KEYCODE_DEL && repeatCount >= WORD_DELETE_AFTER_REPEATS && deleteWordBeforeCursor()) {
+                            return@let
+                        }
+                        processKeyAction(it, KeyBehavior.CLICK)
+                    }
                 }
             } else {
                 when (behavior) {
@@ -202,10 +234,16 @@ class KeyView(
         Timber.d("processKeyAction: label=${key.getLabel()}, code=${action.code}, type=$behavior")
 
         if (action.isModifierKey) {
-            keyboard.clickModifierKey(
-                action.isShiftLock xor (behavior == KeyBehavior.LONG_CLICK),
-                action.modifierKeyOnMask,
-            )
+            val lock = if (action.shiftLock == "double") {
+                // iOS 式：单击是一次性 Shift，快速双击锁定大写，锁定时单击解除
+                val now = SystemClock.elapsedRealtime()
+                val isDoubleTap = now - lastModifierTapTime <= doubleTapTimeout
+                lastModifierTapTime = if (isDoubleTap) 0L else now
+                key.isOn || isDoubleTap || behavior == KeyBehavior.LONG_CLICK
+            } else {
+                action.isShiftLock xor (behavior == KeyBehavior.LONG_CLICK)
+            }
+            keyboard.clickModifierKey(lock, action.modifierKeyOnMask)
             keyboardView.invalidateAllKeys()
             return
         }
@@ -318,10 +356,14 @@ class KeyView(
 
     private fun drawLabel(canvas: Canvas, label: String) {
         val textColor = key.getTextColor()
-        val textSize = sp(key.keyTextSize.takeIf { it > 0 } ?: if (label.length > 1) keyboardView.keyLongTextSize else keyboardView.keyTextSize)
+        // 图标按普通字号画（标签名本身很长，不能按「多字标签」缩小）
+        val textSize = sp(
+            key.keyTextSize.takeIf { it > 0 }
+                ?: if (label.length > 1 && !label.isIconFont) keyboardView.keyLongTextSize else keyboardView.keyTextSize,
+        )
 
         if (label.isIconFont) {
-            drawIcon(canvas, label, textSize.toInt(), textColor, key.keyTextOffsetX, key.keyTextOffsetY)
+            drawIcon(canvas, shiftStateIcon(label), textSize.toInt(), textColor, key.keyTextOffsetX, key.keyTextOffsetY)
         } else {
             textPaint.apply {
                 color = textColor
@@ -445,5 +487,16 @@ class KeyView(
                 canvas.drawText(lines[i], centerX, lineY, symbolPaint)
             }
         }
+    }
+
+    companion object {
+        /** 长按退格连删多少次后改为整词删除（约 1.5 秒） */
+        private const val WORD_DELETE_AFTER_REPEATS = 20
+
+        private const val SHIFT_ICON_OFF = "ic@arrow_up_bold_outline"
+        private const val SHIFT_ICON_ON = "ic@arrow_up_bold"
+        private const val SHIFT_ICON_LOCKED = "ic@apple_keyboard_caps"
+
+        private val doubleTapTimeout by AppPrefs.defaultInstance().keyboard.doubleTapTimeout
     }
 }
