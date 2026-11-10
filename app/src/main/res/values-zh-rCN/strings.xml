@@ -185,6 +185,8 @@
     <string name="keyboard_resize_reset">重置</string>
     <string name="keyboard_resize_done">完成</string>
     <string name="keyboard_resize">调整键盘高度</string>
+    <string name="key_vibration_on">振动：开</string>
+    <string name="key_vibration_off">振动：关</string>
     <string name="navbar_bkg_none">无背景</string>
     <string name="navbar_bkg_color_only">跟随键盘背景色</string>
     <string name="navbar_bkg_full">键盘背景图片</string>

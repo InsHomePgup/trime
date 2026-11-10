@@ -186,6 +186,8 @@
     <string name="keyboard_resize_reset">Reset</string>
     <string name="keyboard_resize_done">Done</string>
     <string name="keyboard_resize">Resize keyboard</string>
+    <string name="key_vibration_on">Vibration: on</string>
+    <string name="key_vibration_off">Vibration: off</string>
     <string name="navbar_bkg_none">No background</string>
     <string name="navbar_bkg_color_only">Follow keyboard color</string>
     <string name="navbar_bkg_full">Keyboard background image</string>

@@ -17,6 +17,7 @@ import com.osfans.trime.core.RimeMessage
 import com.osfans.trime.core.SchemaItem
 import com.osfans.trime.daemon.RimeSession
 import com.osfans.trime.daemon.launchOnReady
+import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.bar.ui.ToolButton
 import com.osfans.trime.ime.broadcast.InputBroadcastReceiver
@@ -44,8 +45,11 @@ class SwitchOptionWindow :
     private val theme: Theme by di.instance()
     private val inputView: InputView by di.instance()
 
-    private val staticEntries by lazy {
-        arrayOf(
+    private val vibratePref = AppPrefs.defaultInstance().keyboard.vibrateOnKeyPress
+
+    // 每次刷新列表时重建，振动开关的文字要反映当前状态
+    private val staticEntries: Array<SwitchOptionEntry.Static>
+        get() = arrayOf(
             SwitchOptionEntry.Static(
                 context.getString(R.string.theme),
                 R.drawable.ic_baseline_color_lens_24,
@@ -71,8 +75,12 @@ class SwitchOptionWindow :
                 R.drawable.ic_baseline_height_24,
                 SwitchOptionEntry.Static.Type.ResizeKeyboard,
             ),
+            SwitchOptionEntry.Static(
+                context.getString(if (vibratePref.getValue()) R.string.key_vibration_on else R.string.key_vibration_off),
+                R.drawable.ic_baseline_vibration_24,
+                SwitchOptionEntry.Static.Type.Vibration,
+            ),
         )
-    }
 
     var popupMenu: PopupMenu? = null
 
@@ -124,6 +132,10 @@ class SwitchOptionWindow :
                         }
                         SwitchOptionEntry.Static.Type.Keyboard -> AppUtils.launchMainToKeyboard(context)
                         SwitchOptionEntry.Static.Type.ResizeKeyboard -> inputView.enterKeyboardResizeMode()
+                        SwitchOptionEntry.Static.Type.Vibration -> {
+                            vibratePref.setValue(!vibratePref.getValue())
+                            updateSchemaOptionEntries()
+                        }
                         SwitchOptionEntry.Static.Type.ThemeList -> showDialog { r ->
                             ThemePickerDialog.build(service.lifecycleScope, context) {
                                 r.commitComposition()
