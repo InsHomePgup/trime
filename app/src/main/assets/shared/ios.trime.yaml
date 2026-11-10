@@ -43,9 +43,13 @@ __patch:
   style/candidate_text_size: 20
   style/candidate_view_height: 34
   style/comment_text_size: 11
-  style/preview_height: 56
-  style/preview_text_size: 32
-  style/preview_offset: -8
+  # 按键气泡（iOS 式：从按键往上长出一个放大的字母）。
+  # 宽、高都是 dp；底边和按键底边对齐，字母画在上面 popup_key_height 那一段
+  style/popup_width: 54
+  style/popup_height: 104
+  style/popup_key_height: 54
+  style/popup_text_size: 30
+  style/popup_bottom_margin: 0
   style/enter_labels/default: 换行
   style/enter_labels/go: 前往
   style/enter_labels/search: 搜索
@@ -88,8 +92,8 @@ __patch:
     on_key_text_color: 0x000000
     hilited_on_key_back_color: 0xabb0bc
     hilited_on_key_text_color: 0x000000
-    preview_back_color: 0xffffff        # 按键气泡
-    preview_text_color: 0x000000
+    popup_back_color: 0xffffff          # 按键气泡
+    popup_text_color: 0x000000
     shadow_color: 0x00000000
     long_text_back_color: 0xffffff
 
@@ -126,8 +130,8 @@ __patch:
     on_key_text_color: 0x000000
     hilited_on_key_back_color: 0x6b6b6e
     hilited_on_key_text_color: 0xffffff
-    preview_back_color: 0x6b6b6e
-    preview_text_color: 0xffffff
+    popup_back_color: 0x6b6b6e
+    popup_text_color: 0xffffff
     shadow_color: 0x00000000
     long_text_back_color: 0x6b6b6e
 

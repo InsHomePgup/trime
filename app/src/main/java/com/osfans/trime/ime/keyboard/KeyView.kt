@@ -240,6 +240,9 @@ class KeyView(
 
     private fun showPopupPreview(behavior: KeyBehavior = KeyBehavior.CLICK) {
         if (!keyboardView.popupOnKeyPress) return
+        // 和 iOS 一样，功能键（空格、Shift、退格、换行、切换键盘等）不弹气泡
+        val click = key.click
+        if (behavior == KeyBehavior.CLICK && (click?.isFunctional == true || click?.code == KeyEvent.KEYCODE_SPACE)) return
         key.getPreviewText(behavior).takeIf { it.isNotEmpty() }?.let { previewText ->
             val context = if (previewText.isIconFont) {
                 previewText
