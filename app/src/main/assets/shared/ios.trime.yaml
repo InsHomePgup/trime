@@ -13,7 +13,7 @@
 # 布局里各键的长按、上滑功能：
 #   字母键  上滑输入数字（第一排）、长按输入符号，键帽右上角有小字提示
 #   z       长按输入 `，虎码里用来进入自然码双拼反查
-#   中/英   单击切换中英文，长按弹出方案选单，上滑切换输入法
+#   中/英   单击切换中英文，长按弹出方案选单，上滑切换输入法，下滑调整键盘高度
 #   123     单击切换到数字键盘，长按打开 emoji
 
 __include: trime:/
@@ -142,6 +142,7 @@ __patch:
   preset_keys/ios_copy: {label: 复制, send: Control+c}
   preset_keys/ios_paste: {label: 粘贴, send: Control+v}
   preset_keys/ios_menu: {label: 方案, send: Menu}
+  preset_keys/ios_resize: {label: 调整高度, send: function, command: resize_keyboard}
 
   # ---------------------------------------------------------------- 键盘布局
   # 虎码、双拼的字母表里带 ; ` 等符号，Trime 会选用名为 default 的布局，
@@ -191,7 +192,7 @@ __patch:
     - {click: ios_backspace, swipe_left: Escape, width: 13}
     # 第四排（label_symbol 设成空格，隐藏功能键上的长按提示，保持 iOS 的干净外观）
     - {click: ios_123, long_click: liquid_keyboard_emoji, label_symbol: ' ', width: 12.5}
-    - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, label_symbol: ' ', width: 12.5}
+    - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, swipe_down: ios_resize, label_symbol: ' ', width: 12.5}
     - {click: ios_space, width: 50}
     - {click: ios_return, composing: ios_confirm, long_click: CommitComment, label_symbol: ' ', width: 25}
 
@@ -231,7 +232,7 @@ __patch:
     - {width: 2}
     - {click: ios_backspace, width: 13}
     - {click: ios_abc, width: 12.5}
-    - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, label_symbol: " ", width: 12.5}
+    - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, swipe_down: ios_resize, label_symbol: " ", width: 12.5}
     - {click: ios_space, width: 50}
     - {click: ios_return, composing: ios_confirm, width: 25}
 
@@ -271,6 +272,6 @@ __patch:
     - {width: 2}
     - {click: ios_backspace, width: 13}
     - {click: ios_abc, width: 12.5}
-    - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, label_symbol: " ", width: 12.5}
+    - {click: ios_mode, long_click: ios_menu, swipe_up: IME_switch, swipe_down: ios_resize, label_symbol: " ", width: 12.5}
     - {click: ios_space, width: 50}
     - {click: ios_return, composing: ios_confirm, width: 25}

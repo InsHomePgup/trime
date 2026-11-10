@@ -180,6 +180,12 @@
     <string name="deploy_failure">Deploy failure</string>
     <string name="view_deploy_failure_log">Deploy failure. Click here to view error log.</string>
     <string name="hide_input_bar">Hide input bar</string>
+    <string name="keyboard_height_scale">Keyboard height (portrait)</string>
+    <string name="keyboard_height_scale_land">Keyboard height (landscape)</string>
+    <string name="keyboard_resize_hint">Drag to resize</string>
+    <string name="keyboard_resize_reset">Reset</string>
+    <string name="keyboard_resize_done">Done</string>
+    <string name="keyboard_resize">Resize keyboard</string>
     <string name="navbar_bkg_none">No background</string>
     <string name="navbar_bkg_color_only">Follow keyboard color</string>
     <string name="navbar_bkg_full">Keyboard background image</string>

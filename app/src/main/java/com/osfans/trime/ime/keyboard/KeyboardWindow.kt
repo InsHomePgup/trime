@@ -80,6 +80,33 @@ class KeyboardWindow :
     private val currentKeyboard: Keyboard? get() = cachedKeyboards[currentKeyboardId]?.first
     private val currentKeyboardView: KeyboardView? get() = cachedKeyboards[currentKeyboardId]?.second
 
+    /** 当前显示的键盘，调整高度时用来读取主题高度和行数 */
+    val activeKeyboard: Keyboard? get() = currentKeyboard
+
+    /**
+     * 键盘高度比例变化后调用：丢掉所有缓存的键盘，按新比例重建当前键盘。
+     *
+     * 不走 [attachKeyboard]，因为它会按键盘布局的设置切换中英文状态，
+     * 调整高度时不应该改变中英文。
+     */
+    fun reloadKeyboards() {
+        if (!::keyboardView.isInitialized) return
+        val target = currentKeyboardId
+        val oldKeyboard = currentKeyboard ?: return
+        detachCurrentView()
+        cachedKeyboards.clear()
+
+        val keyboard = Keyboard(context, theme, selectKeyboardConfig(target))
+        keyboard.lastAsciiMode = oldKeyboard.lastAsciiMode
+        val view = KeyboardView(context, theme, keyboard, popup, service, keyboardActionListener, enterKeyDisplay)
+        cachedKeyboards[target] = keyboard to view
+
+        runBlocking { _currentKeyboardHeight.emit(keyboard.keyboardHeight) }
+        dispatchCapsState(keyboard::setShifted)
+        KeyboardSwitcher.currentKeyboard = keyboard
+        keyboardView.apply { add(view, lParams(matchParent, matchParent)) }
+    }
+
     private val keyboardActionListener = commonKeyboardActionListener.listener
 
     override fun onCreateView(): View {

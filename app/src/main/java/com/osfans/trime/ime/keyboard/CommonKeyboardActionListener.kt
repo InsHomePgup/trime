@@ -24,6 +24,7 @@ import com.osfans.trime.data.theme.ColorManager
 import com.osfans.trime.data.theme.KeyActionManager
 import com.osfans.trime.data.theme.ThemeManager
 import com.osfans.trime.ime.clipboard.ClipboardWindow
+import com.osfans.trime.ime.core.InputView
 import com.osfans.trime.ime.core.TrimeInputMethodService
 import com.osfans.trime.ime.dependency.InputDependencyManager
 import com.osfans.trime.ime.dialog.EnabledSchemaPickerDialog
@@ -57,6 +58,7 @@ class CommonKeyboardActionListener {
     private val windowManager: BoardWindowManager by di.instance()
     private val keyboardWindow: KeyboardWindow by di.instance()
     private val liquidWindow: LiquidWindow by di.instance()
+    private val inputView: InputView by di.instance()
 
     private val prefs = AppPrefs.defaultInstance()
 
@@ -207,6 +209,7 @@ class CommonKeyboardActionListener {
                     "apply" -> handleApplyCommand(arg)
                     "share_text" -> service.shareText()
                     "select_candidate" -> handleSelectCandidate(arg)
+                    "resize_keyboard" -> inputView.enterKeyboardResizeMode()
                     else -> handleIntentAction(action.command, arg)
                 }
             }

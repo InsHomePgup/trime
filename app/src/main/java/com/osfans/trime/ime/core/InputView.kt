@@ -29,7 +29,10 @@ import com.osfans.trime.ime.broadcast.InputBroadcaster
 import com.osfans.trime.ime.candidates.popup.PopupCandidatesMode
 import com.osfans.trime.ime.composition.PreeditDelegate
 import com.osfans.trime.ime.dependency.InputDependencyManager
+import com.osfans.trime.ime.keyboard.KeyboardPrefs
 import com.osfans.trime.ime.keyboard.KeyboardPrefs.isLandscapeMode
+import com.osfans.trime.ime.keyboard.KeyboardPrefs.keyboardHeightScalePref
+import com.osfans.trime.ime.keyboard.KeyboardResizeOverlay
 import com.osfans.trime.ime.keyboard.KeyboardWindow
 import com.osfans.trime.ime.popup.PopupDelegate
 import com.osfans.trime.ime.symbol.LiquidWindow
@@ -47,6 +50,7 @@ import splitties.views.dsl.constraintlayout.constraintLayout
 import splitties.views.dsl.constraintlayout.endOfParent
 import splitties.views.dsl.constraintlayout.endToStartOf
 import splitties.views.dsl.constraintlayout.lParams
+import splitties.views.dsl.constraintlayout.matchConstraints
 import splitties.views.dsl.constraintlayout.startOfParent
 import splitties.views.dsl.constraintlayout.startToEndOf
 import splitties.views.dsl.constraintlayout.topOfParent
@@ -136,6 +140,8 @@ class InputView(
 
     val keyboardView: View
 
+    private val resizeOverlay: KeyboardResizeOverlay
+
     init {
         // MUST call before any operation
         inputDepMgr.start()
@@ -146,6 +152,11 @@ class InputView(
         windowManager.attachWindow(KeyboardWindow)
 
         keyboardBackground.imageDrawable = ColorManager.getDrawable("keyboard_background")
+
+        resizeOverlay =
+            KeyboardResizeOverlay(themedContext, keyboardWindow) { save ->
+                exitKeyboardResizeMode(save)
+            }.apply { visibility = View.GONE }
 
         keyboardView =
             constraintLayout {
@@ -192,6 +203,16 @@ class InputView(
                         startToEndOf(leftPaddingSpace)
                         endToStartOf(rightPaddingSpace)
                         bottomOfParent()
+                    },
+                )
+                // 调整键盘高度的遮罩：盖住工具栏和键盘区，跟着键盘高度一起变化
+                add(
+                    resizeOverlay,
+                    lParams(matchConstraints, matchConstraints) {
+                        topOfParent()
+                        startOfParent()
+                        endOfParent()
+                        above(bottomPaddingSpace)
                     },
                 )
             }
@@ -284,6 +305,35 @@ class InputView(
         }
     }
 
+    val isInKeyboardResizeMode: Boolean
+        get() = resizeOverlay.visibility == View.VISIBLE
+
+    /** 进入「调整键盘高度」模式 */
+    fun enterKeyboardResizeMode() {
+        if (isInKeyboardResizeMode) return
+        windowManager.attachWindow(KeyboardWindow)
+        resizeOverlay.start(context.keyboardHeightScalePref().getValue())
+        resizeOverlay.visibility = View.VISIBLE
+        resizeOverlay.bringToFront()
+    }
+
+    /** 退出调整模式；[save] 为 false 时恢复到原来的高度 */
+    fun exitKeyboardResizeMode(save: Boolean) {
+        if (!isInKeyboardResizeMode) return
+        resizeOverlay.visibility = View.GONE
+        KeyboardPrefs.previewHeightScale = null
+        if (save) {
+            val pref = context.keyboardHeightScalePref()
+            if (pref.getValue() != resizeOverlay.scale) pref.setValue(resizeOverlay.scale)
+        }
+        keyboardWindow.reloadKeyboards()
+    }
+
+    /** 高度偏好在别处（设置页）被修改时调用 */
+    fun onKeyboardHeightScaleChanged() {
+        if (!isInKeyboardResizeMode) keyboardWindow.reloadKeyboards()
+    }
+
     fun updateEnterKeyLabel(info: EditorInfo) {
         enterKeyDisplay.updateLabelOnEditorInfo(info)
     }
@@ -341,6 +391,7 @@ class InputView(
     fun handleInlineSuggestions(response: InlineSuggestionsResponse): Boolean = inputBar.handleInlineSuggestions(response)
 
     override fun onDetachedFromWindow() {
+        KeyboardPrefs.previewHeightScale = null
         ViewCompat.setOnApplyWindowInsetsListener(this, null)
         // cancel the notification job and clear all broadcast receivers,
         // implies that InputView should not be attached again after detached.

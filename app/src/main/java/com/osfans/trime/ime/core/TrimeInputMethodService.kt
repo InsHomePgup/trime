@@ -108,6 +108,12 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
 
     @Keep
+    private val keyboardHeightScaleListener =
+        PreferenceDelegate.OnChangeListener<Int> { _, _ ->
+            inputView?.onKeyboardHeightScaleChanged()
+        }
+
+    @Keep
     private val recreateCandidatesViewListener =
         PreferenceDelegateProvider.OnChangeListener {
             replaceCandidateView(ThemeManager.activeTheme)
@@ -183,6 +189,8 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         recreateInputViewPrefs.forEach {
             it.registerOnChangeListener(recreateInputViewListener)
         }
+        prefs.keyboard.keyboardHeightScale.registerOnChangeListener(keyboardHeightScaleListener)
+        prefs.keyboard.keyboardHeightScaleLand.registerOnChangeListener(keyboardHeightScaleListener)
         prefs.candidates.registerOnChangeListener(recreateCandidatesViewListener)
         InputFeedbackManager.init(this)
         registerReceiver()
@@ -314,6 +322,8 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         recreateInputViewPrefs.forEach {
             it.unregisterOnChangeListener(recreateInputViewListener)
         }
+        prefs.keyboard.keyboardHeightScale.unregisterOnChangeListener(keyboardHeightScaleListener)
+        prefs.keyboard.keyboardHeightScaleLand.unregisterOnChangeListener(keyboardHeightScaleListener)
         prefs.candidates.unregisterOnChangeListener(recreateCandidatesViewListener)
         ThemeManager.removeOnChangedListener(onThemeChangeListener)
         ColorManager.removeOnChangedListener(onColorChangeListener)
@@ -584,6 +594,8 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
     override fun onFinishInputView(finishingInput: Boolean) {
         Timber.d("onFinishInputView: finishingInput=$finishingInput")
+        // 调整高度时收起键盘：放弃本次调整
+        inputView?.exitKeyboardResizeMode(false)
         decorLocationUpdated = false
         inputDeviceManager.onFinishInputView()
         currentInputConnection?.apply {

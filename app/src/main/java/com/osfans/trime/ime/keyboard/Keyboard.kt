@@ -14,6 +14,7 @@ import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.data.theme.model.TextKeyboard
 import com.osfans.trime.ime.keyboard.KeyboardPrefs.isLandscapeMode
+import com.osfans.trime.ime.keyboard.KeyboardPrefs.keyboardHeightScale
 import splitties.bitflags.hasFlag
 import splitties.dimensions.dp
 import splitties.systemservices.windowManager
@@ -144,11 +145,18 @@ class Keyboard(
     val isLock = selfConfig?.lock ?: false // 切換程序時記憶鍵盤
     val asciiKeyboard: String? = selfConfig?.asciiKeyboard // 英文鍵盤
 
-    val keyboardHeight: Int =
+    /** 主题（或键盘布局）里定义的高度，未乘用户缩放比例 */
+    val baseKeyboardHeight: Int =
         intArrayOf(
             selfConfig?.let { getKeyboardHeightFromKeyboardConfig(it) } ?: 0,
             getKeyboardHeightFromTheme(theme),
         ).firstOrNull { it > 0 } ?: 0
+
+    val keyboardHeight: Int = baseKeyboardHeight * context.keyboardHeightScale() / 100
+
+    /** 行数，调整高度时用来计算下限 */
+    var rowCount: Int = 0
+        private set
 
     private val expandKeypressArea: Boolean by AppPrefs.defaultInstance().keyboard.expandKeypressArea
 
@@ -223,6 +231,7 @@ class Keyboard(
             rowRawHeight.add(rowHeight)
 
             val rows = rowRawHeight.size
+            rowCount = rows
             val rawHeightSum = rowRawHeight.sum()
 
             // scaled row heights after fitting into keyboardHeight

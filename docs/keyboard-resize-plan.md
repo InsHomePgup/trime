@@ -1,131 +1,134 @@
 # 方案：拖动调节键盘高度
 
-状态：**待实现**（2026-11-08 记录）
+状态：**已实现**（2026-11-08 记录，2026-11-10 按代码核对后修正并实现，模拟器测试通过）
 
 ## 目标
 
 像 Gboard 一样，在键盘上直接拖动来调整键盘高度，所见即所得，不用改主题文件、不用重新部署。
 
-## 现状
+## 现状（实现前）
 
-- 键盘高度完全由主题决定：`ios.trime.yaml` 里的 `style/keyboard_height`（竖屏，现为 236dp）
-  和 `style/keyboard_height_land`（横屏，现为 180dp）。单个键盘布局也可以用自己的
+- 键盘高度完全由主题决定：`ios.trime.yaml` 里的 `style/keyboard_height`（竖屏，236dp）
+  和 `style/keyboard_height_land`（横屏，180dp）。单个键盘布局也可以用自己的
   `keyboard_height` 覆盖。
-- App 设置里**没有**任何调节高度的选项。
-- 目前唯一的调整方法：在手机 `/sdcard/rime/` 放一个 `ios.trime.custom.yaml`：
-
-  ```yaml
-  patch:
-    style/keyboard_height: 260
-  ```
-
-  然后在 App 里点「部署」。
+- App 设置里没有调节高度的选项，只能写 `ios.trime.custom.yaml` 再部署。
 
 ## 交互设计
 
-1. **入口**：工具栏（候选栏左边的 `•••` 展开后）加一个「调整键盘大小」按钮；
-   也可以在「中」键的长按或上滑里加一个入口（二选一，实现时再定）。
+1. **入口**
+   - 工具栏 `•••` 菜单里的「调整键盘高度」（任何主题都有）；
+   - 键盘上：「中/英」键**下滑**（`ios.trime.yaml` 里的 `ios_resize` 预设键）；
+   - 设置里：「虚拟键盘」页面的「键盘高度（竖屏）」「键盘高度（横屏）」两个滑块。
 2. **进入调整模式**：
-   - 键盘按键全部变成半透明、不可点击；
-   - 键盘**上边缘**出现一条横向拖动手柄（带上下箭头）；
-   - 键盘中间显示当前高度百分比（如「100%」）；
-   - 底部显示两个按钮：「重置」「完成」。
-3. **拖动**：手指按住手柄上下拖，键盘实时变高或变矮，四行按键按比例缩放。
-   - 范围限制：主题高度的 **70% ～ 150%**，并且不超过屏幕高度的一半；
-   - 每 1% 一档，拖动时有轻微振动反馈（可选）。
-4. **完成**：点「完成」或点键盘外区域，保存并退出调整模式。
-5. **重置**：点「重置」恢复到主题默认高度（100%）。
-6. 竖屏和横屏**分别记忆**，在哪个方向下调整，就只改哪个方向。
+   - 键盘上盖一层半透明遮罩，按键不可点击；
+   - 遮罩**上边缘**是一条拖动手柄（带上下箭头）；
+   - 中间显示当前高度百分比（如「100%」）；
+   - 底部两个按钮：「重置」「完成」。
+3. **拖动**：按住手柄上下拖，键盘实时变高变矮，各行按比例缩放。
+   - 范围：主题高度的 **70% ～ 150%**；同时不超过屏幕高度的一半，每行不低于 32dp；
+   - 每 1% 一档，变化时有轻微振动反馈。
+4. **完成**：只能点「完成」退出并保存。
+   （~~点键盘外区域完成~~：输入法收不到自己窗口以外的触摸事件，做不到。）
+5. **重置**：恢复到 100%，仍停留在调整模式，点「完成」才保存。
+6. **横竖屏分别记忆**：按屏幕实际方向（`Configuration.orientation`）区分，
+   在哪个方向下调整就只改哪个方向。
+7. **中途放弃**：调整模式中收起键盘或旋转屏幕，直接退出，不保存。
 
 ## 技术方案
 
-### 1. 存储：保存一个缩放比例，而不是绝对高度
+### 1. 存储：保存缩放比例
 
-在 `AppPrefs.Keyboard`（`data/prefs/AppPrefs.kt` 第 118 行起）加两个偏好：
+`AppPrefs.Keyboard` 加两个带设置界面的偏好（70～150，单位 %）：
 
 ```kotlin
-val keyboardHeightScale = int(KEYBOARD_HEIGHT_SCALE, 100)          // 竖屏，百分比
-val keyboardHeightScaleLand = int(KEYBOARD_HEIGHT_SCALE_LAND, 100) // 横屏
+val keyboardHeightScale = int(R.string.keyboard_height_scale, KEYBOARD_HEIGHT_SCALE, 100, 70, 150, "%")
+val keyboardHeightScaleLand = int(R.string.keyboard_height_scale_land, KEYBOARD_HEIGHT_SCALE_LAND, 100, 70, 150, "%")
 ```
 
-存比例而不是 dp 值，换主题时依然有效，主题作者调整默认高度后也能跟着变。
+存比例而不是 dp，换主题后依然有效。
 
-### 2. 应用比例：在计算键盘高度的地方乘上去
+### 2. 应用比例
 
-`ime/keyboard/Keyboard.kt`：
+`ime/keyboard/Keyboard.kt` 的 `keyboardHeight`（原第 147 行）：先算出主题高度
+`baseKeyboardHeight`，再乘以 `KeyboardPrefs.keyboardHeightScale()`。
+行高本来就按总高度等比分配（第 228–240 行），不用改。
 
-- 第 147 行 `keyboardHeight` 取 `getKeyboardHeightFromKeyboardConfig` / `getKeyboardHeightFromTheme`
-  的结果（已转成 px）。在这里统一乘以当前方向的缩放比例。
-- 行高本来就是「按比例缩放到 keyboardHeight」（第 228–234 行），所以只要改总高度，
-  四行会自动等比例变化，不用动行高逻辑。
+`KeyboardPrefs.keyboardHeightScale()` 优先返回调整模式中的**临时预览比例**
+（`previewHeightScale`），没有时才读偏好。
 
-### 3. 让改动立即生效
+### 3. 只重建键盘，不重建整个输入视图
 
-- `KeyboardWindow` 会缓存 `Keyboard` 和 `KeyboardView`（`cachedKeyboards`，第 112–118 行），
-  高度在构造 `Keyboard` 时就算好了。比例变化后要**清空缓存并重新 attach 当前键盘**。
-- `KeyboardWindow.attachKeyboard` 会通过 `_currentKeyboardHeight` 发出新高度，
-  `InputView` 第 201 行在监听这个 Flow，会跟着调整布局。
-- 简单做法：把两个新偏好加进 `TrimeInputMethodService.recreateInputViewPrefs`（第 99 行），
-  变化时整个输入视图重建。但**拖动过程中不能这样做**（太重，会闪），见下一条。
+- `KeyboardWindow` 新增 `reloadKeyboards()`：清空 `cachedKeyboards`（第 79 行），
+  按当前比例重新构造**当前**键盘并挂上，再通过 `_currentKeyboardHeight` 发出新高度，
+  `InputView` 第 201 行收到后改窗口高度。其他键盘下次切换时按新比例构造。
+- 重建时保留当前键盘的 `lastAsciiMode`，且不走 `attachKeyboard` 里切换中英文的逻辑，
+  避免调整高度时把中英文状态切掉。
+- 偏好变化（设置页滑块、调整模式点「完成」）由 `TrimeInputMethodService` 监听，
+  调用 `inputView?.onKeyboardHeightScaleChanged()` → `reloadKeyboards()`；
+  **不**放进 `recreateInputViewPrefs`，避免整个输入视图重建造成闪烁。
 
 ### 4. 拖动过程中的实时预览
 
-拖动时不要每一帧都重建 `Keyboard`，而是：
+不用 `scaleY`（会把字纵向拉伸）。拖动时每变化 1% 就：
 
-- 只改 `InputView` 里键盘容器的 `layoutParams.height`，并对 `KeyboardView` 做纵向
-  `scaleY`（以底部为锚点），或者临时把行高按比例重算一次；
-- 松手（或点「完成」）时才写入偏好，触发一次真正的重建。
+1. 更新 `previewHeightScale`；
+2. 调用 `reloadKeyboards()` 重建当前键盘（只是一个键盘的布局计算，开销很小）；
+3. 用 `post` 合并同一帧内的多次变化，避免快速拖动时重复重建。
+
+位移用 `MotionEvent.rawY` 计算：拖动时手柄会随键盘一起移动，用相对坐标数值会来回跳。
 
 ### 5. 调整模式的界面
 
-- 新建 `ime/keyboard/KeyboardResizeOverlay.kt`：覆盖在键盘上方的一层 View，
-  包含拖动手柄、百分比文字、「重置」「完成」按钮，自己处理触摸事件
-  （按下手柄后 `ACTION_MOVE` 换算成新的比例）。
-- 由 `InputView` 负责显示和隐藏这一层，调整模式期间拦截键盘的触摸事件。
+新建 `ime/keyboard/KeyboardResizeOverlay.kt`：一个 `FrameLayout`，在 `InputView` 里
+与键盘区域（`windowManager.view`）约束到同一位置，默认隐藏。
 
-### 6. 入口：新增一个 function 命令
+- 自己消费所有触摸事件，保证下面的按键不会被点到；
+- 上边缘手柄处理 `ACTION_DOWN/MOVE/UP`；
+- `onConfigurationChanged`（旋转）时取消调整。
 
-- `ime/keyboard/CommonKeyboardActionListener.kt` 第 196 行的 `when (action.command)` 里加：
+`InputView` 提供 `enterKeyboardResizeMode()` / `exitKeyboardResizeMode(save)`；
+`TrimeInputMethodService.onFinishInputView` 时调用 `exitKeyboardResizeMode(false)`。
 
-  ```kotlin
-  "resize_keyboard" -> inputView?.enterKeyboardResizeMode()
-  ```
+### 6. 入口：新增 function 命令
 
-- 在 `ios.trime.yaml` 里加预设按键并放进工具栏或「中」键：
+`CommonKeyboardActionListener.handleFunctionCommand`（第 196 行）加：
 
-  ```yaml
-  preset_keys/ios_resize: {label: 调整大小, send: function, command: resize_keyboard}
-  ```
+```kotlin
+"resize_keyboard" -> inputView.enterKeyboardResizeMode()
+```
 
-  工具栏按钮通过主题的 `tool_bar/buttons` 配置，`action` 填 `ios_resize`
-  （`ime/bar/InputBarDelegate.kt` 第 127 行会把 action 交给 `KeyActionManager`）。
+`ios.trime.yaml`：
+
+```yaml
+preset_keys/ios_resize: {label: 调整高度, send: function, command: resize_keyboard}
+# 「中/英」键加 swipe_down: ios_resize
+```
+
+`•••` 菜单（`ime/switches/SwitchOptionWindow.kt`）里加一个固定项
+`SwitchOptionEntry.Static.Type.ResizeKeyboard`，点击直接调用 `inputView.enterKeyboardResizeMode()`。
+
+工具栏按钮暂不加：iOS 主题没有配置 `tool_bar`，图标走字体文件，单独为它配一套工具栏改动面大，以后需要再加。
 
 ## 边界情况
 
-- **横竖屏切换**：分别读取各自的比例；调整模式中旋转屏幕时直接退出调整模式（不保存）。
-- **悬浮或单手模式**：如果以后加单手模式，高度比例照样适用，宽度另算。
-- **液体键盘（emoji、剪贴板）**：高度跟随键盘高度，确认它读的是缩放后的值。
-- **最小高度**：按键过矮时（如小于 32dp）字会被裁掉，下限要保证每行至少 32dp。
-- **主题里单个键盘写了自己的 `keyboard_height`**：同样乘以比例，保持一致。
+- **横竖屏切换**：分别读各自的比例；调整中旋转直接退出，不保存。
+- **液体键盘（emoji、剪贴板）**：沿用同一个窗口的高度，自动跟随。
+- **最小高度**：调整下限取 `max(70%, 行数 × 32dp / 主题高度)`。
+- **单个键盘自带 `keyboard_height`**：同样乘以比例。
+- **调整中切换到别的键盘（数字、符号）**：调整模式下按键被遮罩挡住，不会发生。
 
 ## 测试清单
 
-- [ ] 拖动时键盘实时变化，不闪烁、不卡顿
-- [ ] 点「完成」后切到其他 App 再回来，高度保持
-- [ ] 重启手机后高度保持
+- [ ] `•••` 菜单「调整键盘高度」进入调整模式
+- [ ] 「中/英」键下滑进入调整模式
+- [ ] 拖动时键盘实时变化，不闪烁、不卡顿，字形不变形
+- [ ] 上下限：最小 70%，最大不超过 150% 或半屏
+- [ ] 点「完成」后切到其他 App 再回来，高度保持；重启后保持
 - [ ] 竖屏、横屏分别调整，互不影响
 - [ ] 「重置」回到 100%
-- [ ] 切换数字、符号键盘时高度一致
+- [ ] 切换数字、符号键盘、emoji 面板时高度一致
+- [ ] 调整中收起键盘或旋转屏幕：退出且不保存
+- [ ] 调整前是英文模式，调整后仍是英文模式
+- [ ] 设置页滑块修改后，键盘高度跟着变
 - [ ] 切换主题后比例仍然生效
-- [ ] 深色模式下调整界面颜色正常
-
-## 工作量估计
-
-| 部分 | 估计 |
-|---|---|
-| 偏好与高度计算（第 1–3 节） | 小 |
-| 拖动预览与覆盖层界面（第 4–5 节） | 中，主要工作量在这里 |
-| 入口与主题配置（第 6 节） | 小 |
-
-如果想先快速可用，可以分两步：先做「设置里加滑块」（只需要第 1–3 节，再加一个设置项），
-之后再在同一套偏好上补上拖动界面。
+- [ ] 深色模式下调整界面正常

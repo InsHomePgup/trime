@@ -20,6 +20,7 @@ import com.osfans.trime.daemon.launchOnReady
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.bar.ui.ToolButton
 import com.osfans.trime.ime.broadcast.InputBroadcastReceiver
+import com.osfans.trime.ime.core.InputView
 import com.osfans.trime.ime.core.TrimeInputMethodService
 import com.osfans.trime.ime.dialog.EnabledSchemaPickerDialog
 import com.osfans.trime.ime.window.BoardWindow
@@ -41,6 +42,7 @@ class SwitchOptionWindow :
     private val service: TrimeInputMethodService by di.instance()
     private val rime: RimeSession by di.instance()
     private val theme: Theme by di.instance()
+    private val inputView: InputView by di.instance()
 
     private val staticEntries by lazy {
         arrayOf(
@@ -63,6 +65,11 @@ class SwitchOptionWindow :
                 context.getString(R.string.virtual_keyboard),
                 R.drawable.ic_baseline_keyboard_24,
                 SwitchOptionEntry.Static.Type.Keyboard,
+            ),
+            SwitchOptionEntry.Static(
+                context.getString(R.string.keyboard_resize),
+                R.drawable.ic_baseline_height_24,
+                SwitchOptionEntry.Static.Type.ResizeKeyboard,
             ),
         )
     }
@@ -116,6 +123,7 @@ class SwitchOptionWindow :
                             }
                         }
                         SwitchOptionEntry.Static.Type.Keyboard -> AppUtils.launchMainToKeyboard(context)
+                        SwitchOptionEntry.Static.Type.ResizeKeyboard -> inputView.enterKeyboardResizeMode()
                         SwitchOptionEntry.Static.Type.ThemeList -> showDialog { r ->
                             ThemePickerDialog.build(service.lifecycleScope, context) {
                                 r.commitComposition()
