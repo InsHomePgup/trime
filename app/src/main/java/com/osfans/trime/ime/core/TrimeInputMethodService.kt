@@ -167,6 +167,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         )
     }
 
+    /** onCreateInputView 因主题未初始化而跳过了，等 Rime 就绪后补建 */
+    private var pendingInputView = false
+
     override fun onCreate() {
         rime = RimeDaemon.createSession(javaClass.name)
         lifecycleScope.launch {
@@ -181,7 +184,16 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
             it.registerOnChangeListener(recreateInputViewListener)
         }
         prefs.candidates.registerOnChangeListener(recreateCandidatesViewListener)
+        InputFeedbackManager.init(this)
+        registerReceiver()
+        super.onCreate()
+        Timber.d("onCreate")
+        decorView = window.window!!.decorView
+        contentView = decorView.findViewById(android.R.id.content)
+        lastKnownConfig = Configuration(resources.configuration)
         // ensure theme and color managers are initialized after rime is ready
+        // 必须在 super.onCreate() 之后：Rime 已就绪时 runOnReady 会立即执行，
+        // 而 replaceInputViews 需要 super.onCreate() 创建好的输入法窗口
         lifecycleScope.launch {
             rime.runOnReady {
                 ThemeManager.init(resources.configuration)
@@ -190,20 +202,16 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
             }
             // 刚安装或更新后 Rime 要先同步数据，期间系统可能已经要求显示键盘，
             // 那时 onCreateInputView 因主题未初始化而跳过了，这里补建键盘
-            if (inputView == null) {
+            // 只在系统确实要求过键盘时补建；Rime 已就绪时这里在 onCreate 中同步执行，
+            // 此时还没有 EditorInfo，交给随后的 onCreateInputView 正常创建
+            if (pendingInputView && inputView == null) {
+                pendingInputView = false
                 replaceInputViews(ThemeManager.activeTheme)
                 if (currentInputStarted) {
                     inputView?.startInput(currentInputEditorInfo, false)
                 }
             }
         }
-        InputFeedbackManager.init(this)
-        registerReceiver()
-        super.onCreate()
-        Timber.d("onCreate")
-        decorView = window.window!!.decorView
-        contentView = decorView.findViewById(android.R.id.content)
-        lastKnownConfig = Configuration(resources.configuration)
     }
 
     private fun handleRimeMessage(it: RimeMessage<*>) {
@@ -494,6 +502,8 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         // 否则会因访问未初始化的 activeTheme 而崩溃
         if (ThemeManager.isInitialized) {
             replaceInputViews(ThemeManager.activeTheme)
+        } else {
+            pendingInputView = true
         }
         // We will call `setInputView` by ourselves. This is fine.
         return null
