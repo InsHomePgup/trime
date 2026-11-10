@@ -483,3 +483,6 @@ app/src/main/jni/boost/
 # kotlin
 .kotlin
 
+
+# 本地签名密钥（不能提交）
+/key/
